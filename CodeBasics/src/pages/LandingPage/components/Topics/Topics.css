@@ -1,0 +1,31 @@
+.topics {
+  padding: 40px 24px;
+}
+
+.topics-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.topics-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.topic-badge {
+  font-family: var(--font-mono);
+  font-size: 0.9375rem;
+  color: var(--color-text-muted);
+  background-color: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+.topic-badge:hover {
+  border-color: #CCCCCC;
+  color: var(--color-text-main);
+  background-color: #F5F5F5;
+}

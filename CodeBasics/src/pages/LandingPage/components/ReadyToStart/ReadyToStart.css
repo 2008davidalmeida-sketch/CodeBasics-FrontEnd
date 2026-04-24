@@ -1,0 +1,36 @@
+.ready-to-start {
+  padding: 100px 24px;
+}
+
+.ready-to-start-container {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cta-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.cta-title {
+  font-size: 2.5rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+}
+
+.ready-google-btn {
+  padding: 12px 24px;
+}
+
+@media (max-width: 600px) {
+  .ready-to-start-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+}
+
