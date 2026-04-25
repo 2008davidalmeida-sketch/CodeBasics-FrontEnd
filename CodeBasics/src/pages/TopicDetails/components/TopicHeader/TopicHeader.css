@@ -1,0 +1,48 @@
+.topic-header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 3rem;
+    margin-bottom: 4rem;
+}
+
+@media (max-width: 850px) {
+    .topic-header-section {
+        flex-direction: column;
+        gap: 2rem;
+    }
+}
+
+.topic-header-info h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 1rem;
+}
+
+.topic-header-info p {
+    color: #64748b;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+.topic-progress-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 350px;
+    flex-shrink: 0;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.progress-stats span { color: #64748b; }
+.progress-stats strong { color: #1e293b; }

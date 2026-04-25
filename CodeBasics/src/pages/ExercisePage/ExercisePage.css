@@ -1,0 +1,360 @@
+.exercise-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.exercise-content {
+    flex: 1;
+    padding: 3rem 2rem;
+}
+
+.exercise-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+/* Header Section */
+.exercise-header-section {
+    margin-bottom: 3rem;
+}
+
+.back-link {
+    display: inline-block;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 1.5rem;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: #3D8B2E;
+}
+
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    gap: 2rem;
+}
+
+.title-row h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 99px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.status-badge.todo {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+.status-badge.passed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.description-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    line-height: 1.6;
+    color: #475569;
+}
+
+.description-card code {
+    background: #f1f5f9;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    color: #3D8B2E;
+    font-weight: 600;
+}
+
+.example-box {
+    margin-top: 1.5rem;
+    padding: 1.25rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+.example-box h4 {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+}
+
+.code-example {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    color: #1e293b;
+    white-space: pre-wrap;
+}
+
+/* Editor Section */
+.editor-section {
+    margin-bottom: 4rem;
+}
+
+.editor-container {
+    background: #1e1e1e;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.editor-toolbar {
+    background: #2d2d2d;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    border-bottom: 1px solid #3d3d3d;
+}
+
+.dots {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #ff5f56;
+}
+
+.dot.yellow {
+    background: #ffbd2e;
+}
+
+.dot.green {
+    background: #27c93f;
+}
+
+.filename {
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-family: 'DM Mono', monospace;
+}
+
+.editor-body {
+    display: flex;
+    height: 450px;
+    background: #1e1e1e;
+}
+
+.line-numbers {
+    padding: 1rem 0.75rem;
+    background: #1e1e1e;
+    color: #4b5563;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.9rem;
+    text-align: right;
+    user-select: none;
+    border-right: 1px solid #2d2d2d;
+}
+
+.line-numbers span {
+    display: block;
+    line-height: 1.6;
+}
+
+.code-textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: #d4d4d4;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    padding: 1rem;
+    resize: none;
+    outline: none;
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar for Editor */
+.code-textarea::-webkit-scrollbar {
+    width: 14px;
+    /* Slightly wider to accommodate the margin */
+    height: 14px;
+}
+
+.code-textarea::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
+
+.code-textarea::-webkit-scrollbar-thumb {
+    background-color: #555;
+    /* Brighter for visibility */
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    /* This creates the "margin" effect */
+    border-radius: 10px;
+}
+
+.code-textarea::-webkit-scrollbar-thumb:hover {
+    background-color: #777;
+}
+
+.editor-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.upload-btn {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.upload-btn:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.submit-btn {
+    background: #3D8B2E;
+    color: white;
+    border: none;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 14px 0 rgba(61, 139, 46, 0.39);
+}
+
+.submit-btn:hover {
+    background: #347a27;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(61, 139, 46, 0.23);
+}
+
+/* AI Feedback Section */
+.ai-feedback-section {
+    background: white;
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    margin-top: 2rem;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.feedback-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.feedback-badge-large {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    border-radius: 99px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+}
+
+.feedback-badge-large.passed {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.feedback-badge-large.failed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.encouragement-text {
+    font-size: 1.1rem;
+    color: #475569;
+    font-weight: 500;
+}
+
+.feedback-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.feedback-card {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+}
+
+.card-icon {
+    font-size: 1.5rem;
+}
+
+.feedback-card h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+}
+
+.feedback-card p {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.feedback-card.good {
+    border-left: 4px solid #3D8B2E;
+}
+
+.feedback-card.improve {
+    border-left: 4px solid #f59e0b;
+}
+
+.feedback-card.suggestion {
+    border-left: 4px solid #3b82f6;
+}

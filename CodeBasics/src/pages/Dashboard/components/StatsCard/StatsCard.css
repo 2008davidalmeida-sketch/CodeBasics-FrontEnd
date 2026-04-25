@@ -1,0 +1,28 @@
+.stats-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 18px;
+    border: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.stats-label {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stats-value {
+    font-size: 1.8rem;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.stats-value.text-accent {
+    color: #3D8B2E;
+}

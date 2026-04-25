@@ -1,7 +1,11 @@
+import { Link } from 'react-router-dom';
 import { GoogleButton } from '../../../../components/GoogleButton/GoogleButton';
+import { useAuth } from '../../../../context/AuthContext';
 import './ReadyToStart.css';
 
 export function ReadyToStart() {
+    const { user } = useAuth();
+
     return (
         <section className="ready-to-start">
             <div className="ready-to-start-container">
@@ -13,7 +17,13 @@ export function ReadyToStart() {
                     <p className="cta-subtext">Mangualde são aceites</p>
                 </div>                             
                 <div className="cta-button-container">
-                    <GoogleButton className="ready-google-btn" />
+                    {user ? (
+                        <Link to="/dashboard" className="dashboard-link-btn large">
+                            Voltar ao Dashboard 🏠
+                        </Link>
+                    ) : (
+                        <GoogleButton className="ready-google-btn" />
+                    )}
                 </div>
             </div>
         </section>

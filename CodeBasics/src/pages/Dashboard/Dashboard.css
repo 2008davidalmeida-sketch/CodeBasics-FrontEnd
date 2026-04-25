@@ -1,0 +1,95 @@
+.dashboard-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.dashboard-content {
+    flex: 1;
+    padding: 4rem 2rem;
+}
+
+.dashboard-container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+    gap: 2rem;
+}
+
+@media (max-width: 900px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+.dashboard-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    color: #64748b;
+    font-size: 1rem;
+}
+
+/* Overall Progress Card */
+.overall-progress-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    width: 100%;
+    max-width: 400px;
+}
+
+.progress-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+}
+
+.progress-info-row span { color: #64748b; }
+.progress-info-row strong { color: #1e293b; }
+
+/* Metrics Row */
+.metrics-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 4rem;
+    margin-bottom: 4rem;
+}
+
+@media (max-width: 600px) {
+    .metrics-row {
+        flex-direction: column;
+    }
+}
+
+/* Challenges Grid */
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2rem;
+}
+
+.challenges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.text-accent {
+    color: #3D8B2E;
+}

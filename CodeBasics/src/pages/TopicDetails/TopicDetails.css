@@ -1,0 +1,43 @@
+.topic-details-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f8fafc;
+}
+
+.topic-details-content {
+    flex: 1;
+    padding: 3rem 2rem;
+}
+
+.topic-details-container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.back-link {
+    display: inline-block;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    margin-bottom: 2rem;
+    transition: color 0.2s;
+}
+
+.back-link:hover {
+    color: #3D8B2E;
+}
+
+.exercises-section .section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1.5rem;
+}
+
+.exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}

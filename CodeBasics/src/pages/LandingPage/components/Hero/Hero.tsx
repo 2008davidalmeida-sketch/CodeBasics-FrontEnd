@@ -1,7 +1,11 @@
+import { Link } from 'react-router-dom';
 import { GoogleButton } from '../../../../components/GoogleButton/GoogleButton';
+import { useAuth } from '../../../../context/AuthContext';
 import './Hero.css';
 
 export function Hero() {
+    const { user } = useAuth();
+
     return (
         <section className="hero">
             <div className="hero-container">
@@ -21,8 +25,16 @@ export function Hero() {
                 </p>
                 
                 <div className="hero-cta">
-                    <GoogleButton className="hero-google-btn" />
-                    <span className="cta-subtext">apenas emails institucionais</span>
+                    {user ? (
+                        <Link to="/dashboard" className="dashboard-link-btn">
+                            Ir para o Dashboard 🚀
+                        </Link>
+                    ) : (
+                        <>
+                            <GoogleButton className="hero-google-btn" />
+                            <span className="cta-subtext">apenas emails institucionais</span>
+                        </>
+                    )}
                 </div>
             </div>
         </section>
