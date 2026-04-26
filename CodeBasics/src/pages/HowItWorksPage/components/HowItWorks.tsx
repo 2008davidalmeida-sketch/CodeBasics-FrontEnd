@@ -4,7 +4,7 @@ export function HowItWorks() {
     const steps = [
         {
             number: '01',
-            title: 'Escolhe um desafio',
+            title: 'Escolhe um exercício',
             description: 'Exercícios organizados por tema e nível, seguindo o programa da disciplina.'
         },
         {
@@ -15,7 +15,7 @@ export function HowItWorks() {
         {
             number: '03',
             title: 'Recebe feedback da IA',
-            description: 'Análise detalhada — o que está bem, o que melhorar, e porquê. Sem dar a resposta.'
+            description: 'Análise detalhada — o que está bem, o que melhorar, e porquê. Sem dar a resposta final.'
         }
     ];
 

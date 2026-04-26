@@ -10,13 +10,16 @@ interface AuthContextType {
     loading: boolean
 }
 
+// Create the AuthContext
 const AuthContext = createContext<AuthContextType | null>(null)
 
+// AuthProvider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
     const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
     const [loading, setLoading] = useState(true)
 
+    // Effect to check if the user is authenticated
     useEffect(() => {
         if (token) {
             // fetch user data from token
@@ -29,12 +32,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, [token])
 
+    // Login function
     function login(newToken: string) {
         // save token and fetch user
         localStorage.setItem('token', newToken)
         setToken(newToken)
     }
 
+    // Logout function
     function logout() {
         // clear token and user
         localStorage.removeItem('token')

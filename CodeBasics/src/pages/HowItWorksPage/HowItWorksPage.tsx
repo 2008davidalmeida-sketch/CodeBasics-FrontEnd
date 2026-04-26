@@ -1,6 +1,6 @@
 import { Header } from '../../components/Header/Header';
 import { Footer } from '../../components/Footer/Footer';
-import { HowItWorks } from '../LandingPage/components/HowItWorks/HowItWorks';
+import { HowItWorks } from './components/HowItWorks';
 import { FadeIn } from '../../utils/FadeIn/FadeIn';
 import './HowItWorksPage.css';
 
@@ -15,7 +15,7 @@ export function HowItWorksPage() {
                         <p>Descobre todos os passos para começares a programar e a receber feedback em tempo real.</p>
                     </div>
                 </FadeIn>
-                
+
                 <FadeIn delay={200}>
                     <HowItWorks />
                 </FadeIn>

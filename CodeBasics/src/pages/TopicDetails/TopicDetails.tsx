@@ -22,7 +22,9 @@ export default function TopicDetails() {
         ]
     }
 
+    // calculate completed exercises count
     const completedCount = topic.exercises.filter(ex => ex.status === 'completed').length
+    // calculate total exercises count
     const totalCount = topic.exercises.length
 
     return (

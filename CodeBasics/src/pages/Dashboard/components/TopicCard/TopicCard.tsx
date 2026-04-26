@@ -12,10 +12,16 @@ interface TopicCardProps {
 
 export function TopicCard({ index, title, total, completed, isLocked }: TopicCardProps) {
     const navigate = useNavigate()
+
+    // calculate progress percentage
     const progress = (completed / total) * 100
+
+    // check if topic is fully completed
     const isFullyCompleted = completed === total
 
+    // handle navigate to topic
     const handleNavigate = () => {
+        // if topic is not locked, navigate to topic
         if (!isLocked) {
             navigate(`/topico/${title.toLowerCase().replace(/\s+/g, '-')}`)
         }

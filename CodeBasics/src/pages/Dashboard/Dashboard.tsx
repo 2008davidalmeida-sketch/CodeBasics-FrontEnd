@@ -21,18 +21,25 @@ export default function Dashboard() {
         { id: 8, title: 'Funções I', topic: 'Modularização', completed: false },
     ]
 
+    // Count of completed challenges
     const completedChallenges = challenges.filter(c => c.completed).length
     
-    // Topic-based progress
+    // Create an array of unique topics
     const uniqueTopics = Array.from(new Set(challenges.map(c => c.topic)))
+    
+    // Count total topics
     const totalTopics = uniqueTopics.length
+
+    // Count completed topics
     const completedTopics = uniqueTopics.filter(topicName => {
         const topicChallenges = challenges.filter(c => c.topic === topicName)
         return topicChallenges.every(c => c.completed)
     }).length
     
+    // Calculate topic progress percentage
     const topicProgressPercentage = (completedTopics / totalTopics) * 100
 
+    // Render the dashboard
     return (
         <div className="dashboard-page">
             <Header />
@@ -40,10 +47,10 @@ export default function Dashboard() {
                 <div className="dashboard-container">
                     <header className="dashboard-header">
                         <div className="header-text">
-                            <h1>Bem-vindo, <span className="text-accent">{user?.name || 'Explorador'}</span>! 👋</h1>
-                            <p>O teu caminho para mestre de Python começa aqui.</p>
+                            <h1>Olá, <span className="text-accent">{user?.name || 'Explorador'}</span>! 👋</h1>
+                            <p>Explora os tópicos baseados no programa da disciplina de API.</p>
                         </div>
-                        
+
                         <div className="overall-progress-card">
                             <div className="progress-info-row">
                                 <span>Progresso dos Módulos</span>

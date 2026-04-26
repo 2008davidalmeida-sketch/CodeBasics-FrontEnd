@@ -1,7 +1,7 @@
 import { Header } from '../../components/Header/Header';
 import { Hero } from './components/Hero/Hero';
 import { CodeMockup } from './components/CodeMockup/CodeMockup';
-import { HowItWorks } from './components/HowItWorks/HowItWorks';
+import { HowItWorks } from '../HowItWorksPage/components/HowItWorks';
 import { Topics } from './components/Topics/Topics';
 import { ReadyToStart } from './components/ReadyToStart/ReadyToStart';
 import { Footer } from '../../components/Footer/Footer';
@@ -16,19 +16,19 @@ function LandingPage() {
                 <FadeIn delay={100}>
                     <Hero />
                 </FadeIn>
-                
+
                 <FadeIn delay={200}>
                     <CodeMockup />
                 </FadeIn>
-                
+
                 <FadeIn delay={100}>
                     <HowItWorks />
                 </FadeIn>
-                
+
                 <FadeIn delay={100}>
                     <Topics />
                 </FadeIn>
-                
+
                 <FadeIn delay={100}>
                     <ReadyToStart />
                 </FadeIn>

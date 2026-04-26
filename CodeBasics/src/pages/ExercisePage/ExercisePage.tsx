@@ -11,12 +11,13 @@ export default function ExercisePage() {
     const [showFeedback, setShowFeedback] = useState(false)
 
     const handleSubmeter = () => {
-        // Simulação de submissão
+        // Set status to passed and show feedback
         setStatus('passed')
         setShowFeedback(true)
 
-        // Scroll to feedback de forma mais suave e contida
+        // Auto-scroll to feedback section smoothly
         setTimeout(() => {
+            // Auto-scroll to feedback section
             document.getElementById('ai-feedback')?.scrollIntoView({
                 behavior: 'smooth',
                 block: 'nearest'
