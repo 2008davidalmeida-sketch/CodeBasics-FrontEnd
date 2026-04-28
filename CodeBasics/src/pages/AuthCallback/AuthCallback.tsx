@@ -20,7 +20,7 @@ export default function AuthCallback() {
                 navigate('/dashboard')
             } else {
                 // otherwise redirect to login
-                navigate('/login')
+                navigate('/nao-autorizado')
             }
         }, 1500)
 

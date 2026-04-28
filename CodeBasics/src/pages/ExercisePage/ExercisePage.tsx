@@ -1,28 +1,198 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
+import { getChallenge, createSubmission, getChallengeSubmissions } from '../../services/api'
+import type { Challenge, Submission } from '../../types'
 import './ExercisePage.css'
+
+// Skulpt is loaded globally via CDN in index.html
+declare const Sk: any
+
+interface LocalChallenge extends Challenge {
+    completed?: boolean
+}
 
 export default function ExercisePage() {
     const { topicId, exerciseId } = useParams()
-    const [code, setCode] = useState('# Escreve o teu código Python aqui\n\ndef soma_pares(n):\n    # Teu código aqui\n    soma = 0\n    for i in range(1, n + 1):\n        if i % 2 == 0:\n            soma += i\n    return soma')
+    const [challenge, setChallenge] = useState<LocalChallenge | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    const [code, setCode] = useState('')
     const [status, setStatus] = useState<'todo' | 'passed' | 'failed'>('todo')
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [showFeedback, setShowFeedback] = useState(false)
+    const [feedback, setFeedback] = useState('')
+    const [terminalOutput, setTerminalOutput] = useState('')
+    const [isRunning, setIsRunning] = useState(false)
+    const [showTerminal, setShowTerminal] = useState(false)
 
-    const handleSubmeter = () => {
-        // Set status to passed and show feedback
-        setStatus('passed')
-        setShowFeedback(true)
+    useEffect(() => {
+        const controller = new AbortController()
 
-        // Auto-scroll to feedback section smoothly
-        setTimeout(() => {
-            // Auto-scroll to feedback section
-            document.getElementById('ai-feedback')?.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest'
+        const fetchChallengeData = async () => {
+            try {
+                // Check if the exerciseId is valid
+                if (!exerciseId) {
+                    setError('ID do exercício não encontrado')
+                    setIsLoading(false)
+                    return
+                }
+
+                // Get the challenge and submissions data from the API
+                const [challengeRes, submissionsRes] = await Promise.all([
+                    getChallenge(exerciseId, { signal: controller.signal }),
+                    getChallengeSubmissions(exerciseId, { signal: controller.signal })
+                ])
+
+                // If the request is not aborted, set the challenge and loading to false
+                if (!controller.signal.aborted) {
+                    const challengeData = challengeRes.data
+                    const submissions = submissionsRes.data
+
+                    // Check if any submission was successful
+                    const isCompleted = submissions.some((s: Submission) => s.passed)
+
+                    // Set the challenge with the completed status
+                    setChallenge({ ...challengeData, completed: isCompleted })
+
+                    // If already completed, set the status as 'passed'
+                    if (isCompleted) {
+                        setStatus('passed')
+                        // Opcional: Carregar o código da última submissão bem-sucedida
+                        const lastPassed = [...submissions].reverse().find((s: Submission) => s.passed)
+                        if (lastPassed) setCode(lastPassed.code)
+                    } else {
+                        setCode(challengeData.starterCode || '# Escreve o teu código Python aqui\n')
+                    }
+                    
+                    setIsLoading(false)
+                }
+            } catch (err) {
+                if (!controller.signal.aborted) {
+                    console.error('Erro ao carregar exercício:', err)
+                    setError('Não foi possível carregar o exercício.')
+                    setIsLoading(false)
+                }
+            }
+        }
+
+        fetchChallengeData()
+        return () => controller.abort()
+    }, [exerciseId])
+
+    // Run Python code locally using Skulpt
+    const handleRun = async () => {
+        if (isRunning) return
+        setIsRunning(true)
+        setShowTerminal(true)
+        setTerminalOutput('>>> A executar...\n')
+
+        let output = ''
+
+        // Configure Skulpt
+        Sk.configure({
+            output: (text: string) => { output += text },
+            read: (filename: string) => {
+                if (Sk.builtinFiles === undefined || Sk.builtinFiles['files'][filename] === undefined) {
+                    throw new Error(`File not found: ${filename}`)
+                }
+                return Sk.builtinFiles['files'][filename]
+            },
+            inputfun: (prompt: string) => {
+                return new Promise((resolve) => {
+                    // 1. Ensure the prompt is printed to the terminal
+                    if (prompt) setTerminalOutput(prev => prev + prompt);
+                    
+                    // 2. Small delay to allow React to render the output before prompt blocks
+                    setTimeout(() => {
+                        const result = window.prompt(prompt) || '';
+                        // 3. Show the input in the terminal for a realistic feel
+                        setTerminalOutput(prev => prev + result + '\n');
+                        resolve(result);
+                    }, 50);
+                });
+            },
+            inputfunTakesPrompt: true,
+        })
+
+        try {
+            setTerminalOutput('') // Start with clean terminal
+
+            // 
+            await Sk.misceval.asyncToPromise(() => {
+                return Sk.importMainWithBody('<stdin>', false, code, true)
             })
-        }, 100)
+            setTerminalOutput(output || '(sem output)\n')
+        } catch (err: any) {
+            setTerminalOutput(output + '\n❌ Erro: ' + err.toString())
+        } finally {
+            setIsRunning(false)
+        }
+    }
+
+    const handleSubmeter = async () => {
+        if (!exerciseId || isSubmitting) return
+
+        setIsSubmitting(true)
+        setShowFeedback(false) // Hide previous feedback
+
+        try {
+            // Create submission
+            const response = await createSubmission(exerciseId, code)
+            const result: Submission = response.data
+
+            // Set status and feedback
+            setStatus(result.passed ? 'passed' : 'failed')
+            setFeedback(result.feedback)
+            setShowFeedback(true)
+
+            // Atualiza o estado local para marcar como concluído se passou
+            if (result.passed && challenge) {
+                setChallenge({ ...challenge, completed: true })
+            }
+
+            // Auto-scroll to feedback section
+            setTimeout(() => {
+                document.getElementById('ai-feedback')?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest'
+                })
+            }, 100)
+        } catch (err) {
+            console.error('Erro ao submeter:', err)
+            alert('Ocorreu um erro ao submeter o exercício. Tenta novamente.')
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    if (isLoading) {
+        return (
+            <div className="exercise-page">
+                <Header />
+                <main className="exercise-content" style={{ display: 'flex', justifyContent: 'center', padding: '10rem' }}>
+                    <div className="loading-spinner"></div>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
+
+    if (error || !challenge) {
+        return (
+            <div className="exercise-page">
+                <Header />
+                <main className="exercise-content" style={{ textAlign: 'center', padding: '10rem' }}>
+                    <h2>{error || 'Exercício não encontrado'}</h2>
+                    <Link to={`/topico/${topicId}`} className="btn-home" style={{ marginTop: '2rem', display: 'inline-block', width: 'auto' }}>
+                        Voltar ao tópico
+                    </Link>
+                </main>
+                <Footer />
+            </div>
+        )
     }
 
     return (
@@ -37,7 +207,7 @@ export default function ExercisePage() {
                         </Link>
 
                         <div className="title-row">
-                            <h1>Exercício {exerciseId?.padStart(2, '0')} — Soma de Pares</h1>
+                            <h1>Exercício {challenge.order.toString().padStart(2, '0')} — {challenge.title}</h1>
                             <div className={`status-badge ${status}`}>
                                 {status === 'passed' && 'Completo ✅'}
                                 {status === 'failed' && 'Não passou ❌'}
@@ -46,17 +216,7 @@ export default function ExercisePage() {
                         </div>
 
                         <div className="description-card">
-                            <p>Cria uma função que recebe um número <code>n</code> e devolve a soma de todos os números pares de 1 até <code>n</code> (inclusive).</p>
-
-                            <div className="example-box">
-                                <h4>Exemplo esperado:</h4>
-                                <pre className="code-example">
-                                    <code>
-                                        {`# Input: n = 6
-# Output: 12 (porque 2 + 4 + 6 = 12)`}
-                                    </code>
-                                </pre>
-                            </div>
+                            <p>{challenge.description}</p>
                         </div>
                     </div>
 
@@ -70,6 +230,14 @@ export default function ExercisePage() {
                                     <span className="dot green"></span>
                                 </div>
                                 <span className="filename">exercicio.py</span>
+                                <button
+                                    className="run-btn-small"
+                                    onClick={handleRun}
+                                    disabled={isRunning}
+                                    title="Executar código (Ctrl+Enter)"
+                                >
+                                    {isRunning ? '⏳' : '▶ Executar'}
+                                </button>
                             </div>
                             <div className="editor-body">
                                 <div className="line-numbers">
@@ -84,16 +252,30 @@ export default function ExercisePage() {
                                     spellCheck={false}
                                 />
                             </div>
+
+                            {/* Integrated Terminal Panel */}
+                            <div className={`integrated-terminal ${showTerminal ? 'open' : ''}`}>
+                                <div className="terminal-header">
+                                    <span className="terminal-title">TERMINAL</span>
+                                    <button className="terminal-close-btn" onClick={() => setShowTerminal(false)}>✕</button>
+                                </div>
+                                <pre className="integrated-output">{terminalOutput}</pre>
+                            </div>
                         </div>
 
                         <div className="editor-actions">
                             <button className="upload-btn">
                                 <span>📁</span> Carregar ficheiro .py
                             </button>
-                            <button className="submit-btn" onClick={handleSubmeter}>
-                                Submeter Exercício
+                            <button
+                                className="submit-btn"
+                                onClick={handleSubmeter}
+                                disabled={isSubmitting}
+                            >
+                                {isSubmitting ? 'A avaliar...' : 'Submeter Exercício'}
                             </button>
                         </div>
+
                     </div>
 
                     {/* 4. Feedback da IA */}
@@ -104,32 +286,31 @@ export default function ExercisePage() {
                                     {status === 'passed' ? 'Passou ✅' : 'Não passou ❌'}
                                 </div>
                                 <p className="encouragement-text">
-                                    Excelente trabalho! Estás a progredir muito bem na lógica de ciclos e condições. 🚀
+                                    {status === 'passed'
+                                        ? 'Excelente trabalho! Estás a progredir muito bem. 🚀'
+                                        : 'Ainda não foi desta, mas não desistas! Vê as sugestões abaixo. 💪'}
                                 </p>
                             </div>
 
                             <div className="feedback-grid">
-                                <div className="feedback-card good">
-                                    <div className="card-icon">✅</div>
-                                    <div className="card-content">
-                                        <h3>O que está bem</h3>
-                                        <p>A estrutura da função está correta e utilizaste nomes de variáveis claros que seguem as convenções do Python.</p>
-                                    </div>
-                                </div>
-                                <div className="feedback-card improve">
-                                    <div className="card-icon">🔧</div>
-                                    <div className="card-content">
-                                        <h3>O que pode ser melhorado</h3>
-                                        <p>Poderias considerar usar uma list comprehension ou a função <code>sum()</code> com um gerador para tornar o código mais conciso.</p>
-                                    </div>
-                                </div>
-                                <div className="feedback-card suggestion">
-                                    <div className="card-icon">💡</div>
-                                    <div className="card-content">
-                                        <h3>Sugestão</h3>
-                                        <p>Tenta resolver este mesmo problema usando <code>range(2, n + 1, 2)</code> para iterar apenas sobre os números pares.</p>
-                                    </div>
-                                </div>
+                                {feedback.split('\n\n').filter(p => p.trim() !== '').map((part, index) => {
+                                    const titles = ['O que está bem', 'O que pode ser melhorado', 'Sugestão']
+                                    const icons = ['✅', '🔧', '💡']
+                                    const classes = ['good', 'improve', 'suggestion']
+
+                                    // Cicla pelos estilos se houver mais de 3 partes
+                                    const styleIdx = index % 3
+
+                                    return (
+                                        <div key={index} className={`feedback-card ${classes[styleIdx]}`}>
+                                            <div className="card-icon">{icons[styleIdx]}</div>
+                                            <div className="card-content">
+                                                <h3>{titles[styleIdx]}</h3>
+                                                <p>{part.replace(/^###\s*|^[0-9]\.\s*/, '')}</p>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
                     )}

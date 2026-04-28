@@ -93,3 +93,17 @@
 .text-accent {
     color: #3D8B2E;
 }
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(61, 139, 46, 0.1);
+    border-radius: 50%;
+    border-top-color: #3D8B2E;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}

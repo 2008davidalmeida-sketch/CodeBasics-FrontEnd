@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { AxiosRequestConfig } from 'axios'
 
 // create axios instance
 const api = axios.create({
@@ -19,30 +20,30 @@ api.interceptors.request.use((config) => {
 })
 
 // auth
-export function getMe() {
-    return api.get('/auth/me')
+export function getMe(config?: AxiosRequestConfig) {
+    return api.get('/auth/me', config)
 }
 
 // challenges
-export function getChallenges() {
-    return api.get('/challenges')
+export function getChallenges(config?: AxiosRequestConfig) {
+    return api.get('/challenges', config)
 }
 
-export function getChallenge(id: string) {
-    return api.get(`/challenges/${id}`)
+export function getChallenge(id: string, config?: AxiosRequestConfig) {
+    return api.get(`/challenges/${id}`, config)
 }
 
 // submissions
-export function createSubmission(challengeId: string, code: string) {
-    return api.post('/submissions', { challengeId, code })
+export function createSubmission(challengeId: string, code: string, config?: AxiosRequestConfig) {
+    return api.post('/submissions', { challengeId, code }, config)
 }
 
-export function getMySubmissions() {
-    return api.get('/submissions/me')
+export function getMySubmissions(config?: AxiosRequestConfig) {
+    return api.get('/submissions/me', config)
 }
 
-export function getChallengeSubmissions(challengeId: string) {
-    return api.get(`/submissions/challenge/${challengeId}`)
+export function getChallengeSubmissions(challengeId: string, config?: AxiosRequestConfig) {
+    return api.get(`/submissions/challenge/${challengeId}`, config)
 }
 
 export default api

@@ -1,32 +1,76 @@
+import { useState, useEffect } from 'react'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
 import { StatsCard } from './components/StatsCard/StatsCard'
 import { TopicCard } from './components/TopicCard/TopicCard'
 import { ProgressBar } from './components/ProgressBar/ProgressBar'
 import { useAuth } from '../../context/AuthContext'
+import { getChallenges, getMySubmissions } from '../../services/api'
+import type { Challenge, Submission } from '../../types'
 import './Dashboard.css'
 
 export default function Dashboard() {
     const { user } = useAuth()
 
-    // Mock data for challenges (will be replaced by API call later)
-    const challenges = [
-        { id: 1, title: 'Olá Mundo', topic: 'Básico', completed: true },
-        { id: 2, title: 'Variáveis e Tipos', topic: 'Básico', completed: true },
-        { id: 3, title: 'Operações Matemáticas', topic: 'Lógica', completed: true },
-        { id: 4, title: 'Estruturas Condicionais', topic: 'Lógica', completed: false },
-        { id: 5, title: 'Listas em Python', topic: 'Estruturas', completed: false },
-        { id: 6, title: 'Loops While', topic: 'Iteração', completed: false },
-        { id: 7, title: 'Loops For', topic: 'Iteração', completed: false },
-        { id: 8, title: 'Funções I', topic: 'Modularização', completed: false },
-    ]
+    // Interface for challenges from API ( extends Challenge interface and adds completed property)
+    interface DashboardChallenge extends Challenge {
+        completed: boolean
+    }
+
+    const [challenges, setChallenges] = useState<DashboardChallenge[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
+
+    useEffect(() => {
+        // AbortController to prevent state updates after component unmounts
+        const controller = new AbortController()
+
+        const fetchChallenges = async () => {
+            try {
+                // fetch challenges and submissions in parallel
+                const [challengesRes, submissionsRes] = await Promise.all([
+                    getChallenges({ signal: controller.signal }),
+                    getMySubmissions({ signal: controller.signal })
+                ])
+                
+                if (!controller.signal.aborted) {
+                    const allChallenges = challengesRes.data
+                    const allSubmissions = submissionsRes.data
+
+                    // challengeId from MongoDB (object, not string)
+                    const mappedChallenges = allChallenges.map((challenge: Challenge) => {
+                        const hasPassed = allSubmissions.some((s: any) => {
+                            const subId = typeof s.challengeId === 'object' ? s.challengeId._id : s.challengeId
+                            return String(subId) === String(challenge._id) && s.passed
+                        })
+                        return { ...challenge, completed: hasPassed }
+                    })
+
+                    setChallenges(mappedChallenges)
+                    setIsLoading(false)
+                }
+            } catch (err) {
+                // if component is still mounted, set error
+                if (!controller.signal.aborted) {
+                    console.error('Erro ao carregar desafios:', err)
+                    setError('Não foi possível carregar os teus desafios.')
+                    setIsLoading(false)
+                }
+            }
+        }
+
+        fetchChallenges()
+
+        // cleanup function to abort the request
+        return () => controller.abort()
+    }, [])
 
     // Count of completed challenges
     const completedChallenges = challenges.filter(c => c.completed).length
-    
+
     // Create an array of unique topics
     const uniqueTopics = Array.from(new Set(challenges.map(c => c.topic)))
-    
+
     // Count total topics
     const totalTopics = uniqueTopics.length
 
@@ -35,9 +79,52 @@ export default function Dashboard() {
         const topicChallenges = challenges.filter(c => c.topic === topicName)
         return topicChallenges.every(c => c.completed)
     }).length
-    
-    // Calculate topic progress percentage
-    const topicProgressPercentage = (completedTopics / totalTopics) * 100
+
+    // Calculate topic progress percentage (prevent division by zero)
+    const topicProgressPercentage = totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0
+
+    if (isLoading) {
+        return (
+            <div className="dashboard-page">
+                <Header />
+                <main className="dashboard-content">
+                    <div className="dashboard-container" style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}>
+                        <div className="loading-spinner"></div>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="dashboard-page">
+                <Header />
+                <main className="dashboard-content">
+                    <div className="dashboard-container" style={{ textAlign: 'center', padding: '4rem' }}>
+                        <h2 style={{ color: '#e11d48', marginBottom: '1rem' }}>Ups! Algo correu mal</h2>
+                        <p style={{ color: '#64748b', marginBottom: '2rem' }}>{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            style={{
+                                padding: '0.75rem 1.5rem',
+                                backgroundColor: '#3D8B2E',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: '600'
+                            }}
+                        >
+                            Tentar Novamente
+                        </button>
+                    </div>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
 
     // Render the dashboard
     return (
@@ -61,21 +148,21 @@ export default function Dashboard() {
                     </header>
 
                     <div className="metrics-row">
-                        <StatsCard 
-                            label="Exercícios Superados" 
-                            value={completedChallenges} 
-                            icon="🏆" 
+                        <StatsCard
+                            label="Exercícios Concluídos"
+                            value={completedChallenges}
+                            icon="🏆"
                         />
-                        <StatsCard 
-                            label="Dias de Ofensiva" 
-                            value="3 Dias" 
-                            icon="🔥" 
+                        <StatsCard
+                            label=""
+                            value=""
+                            icon="🔥"
                         />
-                        <StatsCard 
-                            label="Total de XP" 
-                            value={completedChallenges * 150} 
-                            icon="💎" 
-                            accent 
+                        <StatsCard
+                            label="Total de Pontos"
+                            value={completedChallenges * 150}
+                            icon="💎"
+                            accent
                         />
                     </div>
 
@@ -86,14 +173,14 @@ export default function Dashboard() {
                                 const topicChallenges = challenges.filter(c => c.topic === topicName)
                                 const total = topicChallenges.length
                                 const completed = topicChallenges.filter(c => c.completed).length
-                                
+
                                 // Logic for locking
                                 const isLocked = index > 0 && !uniqueTopics.slice(0, index).every(prevName => {
                                     return challenges.filter(c => c.topic === prevName).every(c => c.completed)
                                 })
 
                                 return (
-                                    <TopicCard 
+                                    <TopicCard
                                         key={topicName}
                                         index={index}
                                         title={topicName}

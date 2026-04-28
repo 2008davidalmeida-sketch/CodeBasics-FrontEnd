@@ -1,32 +1,112 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
 import { TopicHeader } from './components/TopicHeader/TopicHeader'
 import { ExerciseItem } from './components/ExerciseItem/ExerciseItem'
+import { getChallenges, getMySubmissions } from '../../services/api'
+import type { Challenge, Submission } from '../../types'
 import './TopicDetails.css'
 
 export default function TopicDetails() {
     const { id } = useParams()
 
-    // Mock data for the topic (in a real app, this would be fetched based on id)
-    const topic = {
-        id: id || '1',
-        title: 'Básico de Python',
-        description: 'Aprende os conceitos fundamentais da linguagem Python, desde a sintaxe básica até variáveis e tipos de dados.',
-        exercises: [
-            { id: '1', title: 'Olá Mundo', status: 'completed' as const },
-            { id: '2', title: 'Variáveis e Tipos', status: 'completed' as const },
-            { id: '3', title: 'Operações Matemáticas', status: 'in-progress' as const },
-            { id: '4', title: 'Input de Usuário', status: 'todo' as const },
-            { id: '5', title: 'Desafio: Calculadora', status: 'todo' as const },
-        ]
+    // Interface for challenges from API 
+    interface DashboardChallenge extends Challenge {
+        completed: boolean
     }
 
-    // calculate completed exercises count
-    const completedCount = topic.exercises.filter(ex => ex.status === 'completed').length
-    // calculate total exercises count
-    const totalCount = topic.exercises.length
+    const [challenges, setChallenges] = useState<DashboardChallenge[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
 
+    useEffect(() => {
+        const controller = new AbortController()
+
+        const fetchData = async () => {
+            try {
+                // Get challenges and submissions from the API at the same time
+                const [challengesRes, submissionsRes] = await Promise.all([
+                    getChallenges({ signal: controller.signal }),
+                    getMySubmissions({ signal: controller.signal })
+                ])
+
+                // If the request is not aborted, set the challenge and loading to false
+                if (!controller.signal.aborted) {
+                    const allChallenges = challengesRes.data
+                    const allSubmissions = submissionsRes.data
+
+                    // Filter challenges by topic id
+                    const topicChallenges = allChallenges.filter((c: Challenge) => 
+                        c.topic.toLowerCase().replace(/\s+/g, '-') === id
+                    )
+
+                    // challengeId vem populado do MongoDB (é um objeto, não uma string)
+                    const mappedChallenges = topicChallenges.map((challenge: Challenge) => {
+                        const hasPassed = allSubmissions.some((s: any) => {
+                            const subId = typeof s.challengeId === 'object' ? s.challengeId._id : s.challengeId
+                            return String(subId) === String(challenge._id) && s.passed
+                        })
+                        return { ...challenge, completed: hasPassed }
+                    })
+
+                    // Sort challenges by order
+                    setChallenges(mappedChallenges.sort((a: DashboardChallenge, b: DashboardChallenge) => a.order - b.order))
+                    setIsLoading(false)
+                }
+            } catch (err) {
+                if (!controller.signal.aborted) {
+                    console.error('Erro ao carregar tópico:', err)
+                    setError('Não foi possível carregar os desafios deste tópico.')
+                    setIsLoading(false)
+                }
+            }
+        }
+
+        fetchData()
+        return () => controller.abort()
+    }, [id])
+
+    // Loading screen
+    if (isLoading) {
+        return (
+            <div className="topic-details-page">
+                <Header />
+                <main className="topic-details-content" style={{ display: 'flex', justifyContent: 'center', padding: '10rem' }}>
+                    <div className="loading-spinner"></div>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
+
+    // Error screen
+    if (error || challenges.length === 0) {
+        return (
+            <div className="topic-details-page">
+                <Header />
+                <main className="topic-details-content" style={{ textAlign: 'center', padding: '10rem' }}>
+                    <h2>{error || 'Tópico não encontrado'}</h2>
+                    <Link to="/dashboard" className="btn-home" style={{ marginTop: '2rem', display: 'inline-block', width: 'auto' }}>
+                        Voltar ao Dashboard
+                    </Link>
+                </main>
+                <Footer />
+            </div>
+        )
+    }
+
+    // Get the topic title and description from the first challenge
+    const topicTitle = challenges[0].topic
+    const topicDescription = `Aprende e domina todos os conceitos de ${topicTitle} através destes desafios práticos.`
+
+    // Calculate completed exercises count
+    const completedCount = challenges.filter(c => c.completed).length
+
+    // Calculate total exercises count
+    const totalCount = challenges.length
+
+    // Render the topic details
     return (
         <div className="topic-details-page">
             <Header />
@@ -37,32 +117,39 @@ export default function TopicDetails() {
                     </Link>
 
                     <TopicHeader
-                        title={topic.title}
-                        description={topic.description}
+                        title={topicTitle}
+                        description={topicDescription}
                         completedCount={completedCount}
                         totalCount={totalCount}
                     />
+                    <section className="exercises-list">
+                        {challenges.map((exercise, index) => {
+                            // Check if the exercise is completed
+                            const isCompleted = exercise.completed
 
-                    <section className="exercises-section">
-                        <h2 className="section-title">Exercícios</h2>
-                        <div className="exercises-list">
-                            {topic.exercises.map((exercise, index) => {
-                                // An exercise is locked if it's not the first and the previous one is not completed
-                                const isLocked = index > 0 && topic.exercises[index - 1].status !== 'completed';
-                                
-                                return (
-                                    <ExerciseItem 
-                                        key={exercise.id}
-                                        id={exercise.id}
-                                        topicId={id || '1'}
-                                        index={index}
-                                        title={exercise.title}
-                                        status={exercise.status}
-                                        isLocked={isLocked}
-                                    />
-                                )
-                            })}
-                        </div>
+                            // Check if the previous exercise is completed
+                            const isPreviousCompleted = index === 0 || challenges[index - 1].completed
+
+                            // Set the status of the exercise
+                            let status: 'completed' | 'in-progress' | 'todo' = 'todo'
+                            if (isCompleted) status = 'completed'
+                            else if (isPreviousCompleted) status = 'in-progress'
+
+                            // Check if the exercise is locked
+                            const isLocked = index > 0 && !challenges[index - 1].completed
+
+                            return (
+                                <ExerciseItem
+                                    key={exercise._id}
+                                    id={exercise._id}
+                                    topicId={id || ''}
+                                    index={index}
+                                    title={exercise.title}
+                                    status={status}
+                                    isLocked={isLocked}
+                                />
+                            )
+                        })}
                     </section>
                 </div>
             </main>
