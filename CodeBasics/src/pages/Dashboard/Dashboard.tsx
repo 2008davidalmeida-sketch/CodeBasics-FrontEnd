@@ -28,14 +28,19 @@ export default function Dashboard() {
         const fetchChallenges = async () => {
             try {
                 // fetch challenges and submissions in parallel
-                const [challengesRes, submissionsRes] = await Promise.all([
-                    getChallenges({ signal: controller.signal }),
+                // If submissions fail (e.g. 401), we default to empty array
+                const [challengesRes, allSubmissions] = await Promise.all([
+                    getChallenges({ signal: controller.signal }).then(res => res.data),
                     getMySubmissions({ signal: controller.signal })
+                        .then(res => res.data)
+                        .catch(err => {
+                            console.warn('Submissões não carregadas (utilizador possivelmente não autenticado):', err)
+                            return []
+                        })
                 ])
                 
                 if (!controller.signal.aborted) {
-                    const allChallenges = challengesRes.data
-                    const allSubmissions = submissionsRes.data
+                    const allChallenges = challengesRes
 
                     // challengeId from MongoDB (object, not string)
                     const mappedChallenges = allChallenges.map((challenge: Challenge) => {

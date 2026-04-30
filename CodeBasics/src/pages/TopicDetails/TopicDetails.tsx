@@ -26,15 +26,20 @@ export default function TopicDetails() {
         const fetchData = async () => {
             try {
                 // Get challenges and submissions from the API at the same time
-                const [challengesRes, submissionsRes] = await Promise.all([
-                    getChallenges({ signal: controller.signal }),
+                // If submissions fail, default to empty array
+                const [challengesRes, allSubmissions] = await Promise.all([
+                    getChallenges({ signal: controller.signal }).then(res => res.data),
                     getMySubmissions({ signal: controller.signal })
+                        .then(res => res.data)
+                        .catch(err => {
+                            console.warn('Submissões não carregadas:', err)
+                            return []
+                        })
                 ])
-
+                
                 // If the request is not aborted, set the challenge and loading to false
                 if (!controller.signal.aborted) {
-                    const allChallenges = challengesRes.data
-                    const allSubmissions = submissionsRes.data
+                    const allChallenges = challengesRes
 
                     // Filter challenges by topic id
                     const topicChallenges = allChallenges.filter((c: Challenge) => 

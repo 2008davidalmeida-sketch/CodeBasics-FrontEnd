@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
@@ -28,6 +28,70 @@ export default function ExercisePage() {
     const [isRunning, setIsRunning] = useState(false)
     const [showTerminal, setShowTerminal] = useState(false)
 
+    // Refs for scrolling sync
+    const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const lineNumbersRef = useRef<HTMLDivElement>(null)
+
+    // Sync line numbers scroll with textarea scroll
+    const handleScroll = () => {
+        if (textareaRef.current && lineNumbersRef.current) {
+            lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop
+        }
+    }
+
+    // Calculate number of lines
+    const lineCount = code.split('\n').length
+
+    // Handle indentation and special keys like in VS Code
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        const { selectionStart, selectionEnd, value } = e.currentTarget
+
+        // Handle Tab key
+        if (e.key === 'Tab') {
+            e.preventDefault()
+            const indent = '    ' // 4 spaces
+            const before = value.substring(0, selectionStart)
+            const after = value.substring(selectionEnd)
+            
+            setCode(before + indent + after)
+            
+            // Re-set cursor position after state update
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    textareaRef.current.selectionStart = textareaRef.current.selectionEnd = selectionStart + indent.length
+                }
+            }, 0)
+        }
+
+        // Handle Enter key (Auto-indent)
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            
+            // Get current line indentation
+            const lines = value.substring(0, selectionStart).split('\n')
+            const currentLine = lines[lines.length - 1]
+            const indentMatch = currentLine.match(/^\s*/)
+            const indent = indentMatch ? indentMatch[0] : ''
+            
+            // If line ends with colon, add extra indent (standard for Python)
+            const extraIndent = currentLine.trim().endsWith(':') ? '    ' : ''
+            
+            const before = value.substring(0, selectionStart)
+            const after = value.substring(selectionEnd)
+            const newText = before + '\n' + indent + extraIndent + after
+            
+            setCode(newText)
+            
+            // Re-set cursor position
+            setTimeout(() => {
+                if (textareaRef.current) {
+                    const newPos = selectionStart + 1 + indent.length + extraIndent.length
+                    textareaRef.current.selectionStart = textareaRef.current.selectionEnd = newPos
+                }
+            }, 0)
+        }
+    }
+
     useEffect(() => {
         const controller = new AbortController()
 
@@ -41,15 +105,20 @@ export default function ExercisePage() {
                 }
 
                 // Get the challenge and submissions data from the API
-                const [challengeRes, submissionsRes] = await Promise.all([
-                    getChallenge(exerciseId, { signal: controller.signal }),
+                // If submissions fail (e.g. 401), we default to empty array
+                const [challengeRes, submissions] = await Promise.all([
+                    getChallenge(exerciseId, { signal: controller.signal }).then(res => res.data),
                     getChallengeSubmissions(exerciseId, { signal: controller.signal })
+                        .then(res => res.data)
+                        .catch(err => {
+                            console.warn('Submissões do exercício não carregadas:', err)
+                            return []
+                        })
                 ])
 
                 // If the request is not aborted, set the challenge and loading to false
                 if (!controller.signal.aborted) {
-                    const challengeData = challengeRes.data
-                    const submissions = submissionsRes.data
+                    const challengeData = challengeRes
 
                     // Check if any submission was successful
                     const isCompleted = submissions.some((s: Submission) => s.passed)
@@ -240,15 +309,18 @@ export default function ExercisePage() {
                                 </button>
                             </div>
                             <div className="editor-body">
-                                <div className="line-numbers">
-                                    {Array.from({ length: 20 }).map((_, i) => (
+                                <div className="line-numbers" ref={lineNumbersRef}>
+                                    {Array.from({ length: Math.max(lineCount, 15) }).map((_, i) => (
                                         <span key={i}>{i + 1}</span>
                                     ))}
                                 </div>
                                 <textarea
+                                    ref={textareaRef}
                                     className="code-textarea"
                                     value={code}
                                     onChange={(e) => setCode(e.target.value)}
+                                    onScroll={handleScroll}
+                                    onKeyDown={handleKeyDown}
                                     spellCheck={false}
                                 />
                             </div>
