@@ -26,7 +26,7 @@ export function CodeMockup() {
                             </code>
                         </pre>
                         
-                        <div className="ai-feedback-box">
+                        <div className="mockup-ai-feedback-box">
                             <div className="feedback-label">FEEDBACK DA IA</div>
                             <p className="feedback-text">
                                 A lógica está correta. Podes otimizar o ciclo usando <code>range(2, int(n**0.5)+1)</code> — só precisas de verificar até à raiz quadrada de n, o que é muito mais eficiente para números grandes.

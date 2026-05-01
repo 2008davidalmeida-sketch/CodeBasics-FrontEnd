@@ -27,6 +27,8 @@ export function SubmissionsTable({
     const [challengeSearch, setChallengeSearch] = useState('')
     const [isChallengeOpen, setIsChallengeOpen] = useState(false)
     const [isStatusOpen, setIsStatusOpen] = useState(false)
+    const [currentPage, setCurrentPage] = useState(1)
+    const ITEMS_PER_PAGE = 10
 
     const searchRef = useRef<HTMLDivElement>(null)
     const challengeRef = useRef<HTMLDivElement>(null)
@@ -40,6 +42,7 @@ export function SubmissionsTable({
         } else {
             setSearchTerm('')
         }
+        setCurrentPage(1) // Reset page on filter change
     }, [filters.student, students])
 
     useEffect(() => {
@@ -49,7 +52,13 @@ export function SubmissionsTable({
         } else {
             setChallengeSearch('')
         }
+        setCurrentPage(1) // Reset page on filter change
     }, [filters.challenge, challenges])
+
+    // Reset page when status filter changes
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [filters.status])
 
     // Close results when clicking outside
     useEffect(() => {
@@ -220,7 +229,7 @@ export function SubmissionsTable({
                 </div>
             </div>
 
-            <div className="submissions-table-container">
+            <div className="submissions-table-container" style={{ marginTop: '3.5rem' }}>
                 <table className="submissions-table">
                     <thead>
                         <tr>
@@ -232,30 +241,32 @@ export function SubmissionsTable({
                         </tr>
                     </thead>
                     <tbody>
-                        {submissions.map(sub => {
-                            const subUserId = typeof sub.userId === 'object' ? (sub.userId as any)._id : sub.userId;
-                            const subChallengeId = typeof sub.challengeId === 'object' ? (sub.challengeId as any)._id : sub.challengeId;
+                        {submissions
+                            .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                            .map(sub => {
+                                const subUserId = typeof sub.userId === 'object' ? (sub.userId as any)._id : sub.userId;
+                                const subChallengeId = typeof sub.challengeId === 'object' ? (sub.challengeId as any)._id : sub.challengeId;
 
-                            const student = students.find(s => (s.id === subUserId) || ((s as any)._id === subUserId))
-                            const challenge = challenges.find(c => (c._id === subChallengeId) || ((c as any).id === subChallengeId))
-                            return (
-                                <tr key={sub._id}>
-                                    <td>{student?.name || 'Desconhecido'}</td>
-                                    <td>{challenge?.title || 'Eliminado'}</td>
-                                    <td>{new Date(sub.createdAt).toLocaleString()}</td>
-                                    <td>
-                                        <span className={`status-tag ${sub.passed ? 'passed' : 'failed'}`}>
-                                            {sub.passed ? 'Passou' : 'Falhou'}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button className="inspect-btn" onClick={() => onInspect(sub)}>
-                                            Inspecionar
-                                        </button>
-                                    </td>
-                                </tr>
-                            )
-                        })}
+                                const student = students.find(s => (s.id === subUserId) || ((s as any)._id === subUserId))
+                                const challenge = challenges.find(c => (c._id === subChallengeId) || ((c as any).id === subChallengeId))
+                                return (
+                                    <tr key={sub._id}>
+                                        <td>{student?.name || 'Desconhecido'}</td>
+                                        <td>{challenge?.title || 'Eliminado'}</td>
+                                        <td>{new Date(sub.createdAt).toLocaleString()}</td>
+                                        <td>
+                                            <span className={`status-tag ${sub.passed ? 'passed' : 'failed'}`}>
+                                                {sub.passed ? 'Passou' : 'Falhou'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button className="inspect-btn" onClick={() => onInspect(sub)}>
+                                                Inspecionar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
                         {submissions.length === 0 && (
                             <tr>
                                 <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
@@ -266,6 +277,29 @@ export function SubmissionsTable({
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination Controls */}
+            {submissions.length > ITEMS_PER_PAGE && (
+                <div className="pagination-controls">
+                    <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(p => p - 1)}
+                        className="pagination-btn"
+                    >
+                        Anterior
+                    </button>
+                    <span className="page-info">
+                        Página {currentPage} de {Math.ceil(submissions.length / ITEMS_PER_PAGE)}
+                    </span>
+                    <button 
+                        disabled={currentPage === Math.ceil(submissions.length / ITEMS_PER_PAGE)}
+                        onClick={() => setCurrentPage(p => p + 1)}
+                        className="pagination-btn"
+                    >
+                        Próximo
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

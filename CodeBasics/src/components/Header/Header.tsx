@@ -20,7 +20,7 @@ export function Header() {
         }
         // Event listener to close the menu when clicking outside
         document.addEventListener('mousedown', handleClickOutside);
-        
+
         // Close menu on route change
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
@@ -38,16 +38,16 @@ export function Header() {
                 <Link to="/" className="logo">
                     <strong>Code</strong>.Basics
                 </Link>
-                
+
                 <nav className="header-nav">
                     <Link to="/como-funciona" className="nav-link">como funciona</Link>
                     {user?.role === 'teacher' && (
                         <Link to="/teacher" className="nav-link teacher-link">área do professor</Link>
                     )}
-                    
+
                     {user ? (
                         <div className="user-menu-container" ref={menuRef}>
-                            <button 
+                            <button
                                 className="user-profile-btn"
                                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                                 title={user.name}
@@ -60,7 +60,7 @@ export function Header() {
                                     </div>
                                 )}
                             </button>
-                            
+
                             {isMenuOpen && (
                                 <div className="user-dropdown">
                                     <div className="dropdown-header">
@@ -68,24 +68,24 @@ export function Header() {
                                         <span className="user-email">{user.email}</span>
                                     </div>
                                     <div className="dropdown-divider"></div>
-                                    <Link 
-                                        to="/dashboard" 
+                                    <Link
+                                        to="/dashboard"
                                         className="dropdown-item"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         🏠 Painel do Aluno
                                     </Link>
-                                    
+
                                     {user.role === 'teacher' && (
-                                        <Link 
-                                            to="/teacher" 
+                                        <Link
+                                            to="/teacher"
                                             className="dropdown-item"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             👨‍🏫 Área do Professor
                                         </Link>
                                     )}
-                                    
+
                                     <button onClick={handleLogout} className="dropdown-item logout">
                                         🚪 Sair da Conta
                                     </button>

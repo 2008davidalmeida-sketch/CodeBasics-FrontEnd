@@ -38,7 +38,7 @@ export default function Dashboard() {
                             return []
                         })
                 ])
-                
+
                 if (!controller.signal.aborted) {
                     const allChallenges = challengesRes
 

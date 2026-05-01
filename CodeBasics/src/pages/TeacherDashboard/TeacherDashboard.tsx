@@ -5,6 +5,7 @@ import { getAllStudents, getAllSubmissions, getChallenges } from '../../services
 import type { User, Submission, Challenge } from '../../types'
 
 // Components
+import { ChallengesAnalytics } from './components/ChallengesAnalytics/ChallengesAnalytics'
 import { StatsOverview } from './components/StatsOverview/StatsOverview'
 import { StudentCard } from './components/StudentCard/StudentCard'
 import { SubmissionsTable } from './components/SubmissionsTable/SubmissionsTable'
@@ -22,10 +23,15 @@ export default function TeacherDashboard() {
     const [students, setStudents] = useState<StudentProgress[]>([])
     const [submissions, setSubmissions] = useState<Submission[]>([])
     const [challenges, setChallenges] = useState<Challenge[]>([])
-    const [activeTab, setActiveTab] = useState<'students' | 'submissions'>('submissions')
+    const [activeTab, setActiveTab] = useState<'students' | 'submissions' | 'challenges'>('submissions')
+    const [studentPage, setStudentPage] = useState(1)
+    const [studentSearch, setStudentSearch] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     
+    // Pagination items per page
+    const ITEMS_PER_PAGE = 6
+
     // Filters
     const [filters, setFilters] = useState({
         student: 'all',
@@ -168,7 +174,7 @@ export default function TeacherDashboard() {
                 <div className="teacher-container">
                     <header className="teacher-header-section">
                         <h1>Área do Professor</h1>
-                        <p className="subtitle">Gerir alunos e acompanhar o progresso em tempo real.</p>
+                        <p className="subtitle">Gerir alunos e acompanhar o progresso com estatísticas detalhadas.</p>
                     </header>
 
                     <StatsOverview 
@@ -185,6 +191,12 @@ export default function TeacherDashboard() {
                             Histórico de Submissões
                         </button>
                         <button 
+                            className={`tab-btn ${activeTab === 'challenges' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('challenges')}
+                        >
+                            Análise por Desafio
+                        </button>
+                        <button 
                             className={`tab-btn ${activeTab === 'students' ? 'active' : ''}`}
                             onClick={() => setActiveTab('students')}
                         >
@@ -192,14 +204,32 @@ export default function TeacherDashboard() {
                         </button>
                     </div>
 
-                    {activeTab === 'students' ? (
+                    {activeTab === 'challenges' ? (
+                        <ChallengesAnalytics 
+                            challenges={challenges}
+                            submissions={submissions}
+                        />
+                    ) : activeTab === 'students' ? (
                         <div className="students-list">
                             <div className="list-header">
                                 <h2>Progresso da Turma</h2>
+                                <div className="search-input-wrapper" style={{ maxWidth: '300px', marginTop: '2rem', marginBottom: '2.5rem' }}>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Pesquisar aluno por nome..."
+                                        value={studentSearch}
+                                        onChange={(e) => {
+                                            setStudentSearch(e.target.value);
+                                            setStudentPage(1);
+                                        }}
+                                        className="search-input"
+                                    />
+                                </div>
                             </div>
                             <div className="students-grid">
                                 {students
-                                    .filter(u => u.role === 'student')
+                                    .filter(u => u.role === 'student' && u.name.toLowerCase().includes(studentSearch.toLowerCase()))
+                                    .slice((studentPage - 1) * ITEMS_PER_PAGE, studentPage * ITEMS_PER_PAGE)
                                     .map(student => {
                                         const sId = student.id || (student as any)._id;
                                         return (
@@ -214,6 +244,35 @@ export default function TeacherDashboard() {
                                         );
                                     })}
                             </div>
+
+                            {/* Pagination Controls */}
+                            {students.filter(u => u.role === 'student' && u.name.toLowerCase().includes(studentSearch.toLowerCase())).length > ITEMS_PER_PAGE && (
+                                <div className="pagination-controls">
+                                    <button 
+                                        disabled={studentPage === 1}
+                                        onClick={() => setStudentPage(p => p - 1)}
+                                        className="pagination-btn"
+                                    >
+                                        Anterior
+                                    </button>
+                                    <span className="page-info">
+                                        Página {studentPage} de {Math.ceil(students.filter(u => u.role === 'student' && u.name.toLowerCase().includes(studentSearch.toLowerCase())).length / ITEMS_PER_PAGE)}
+                                    </span>
+                                    <button 
+                                        disabled={studentPage === Math.ceil(students.filter(u => u.role === 'student' && u.name.toLowerCase().includes(studentSearch.toLowerCase())).length / ITEMS_PER_PAGE)}
+                                        onClick={() => setStudentPage(p => p + 1)}
+                                        className="pagination-btn"
+                                    >
+                                        Próximo
+                                    </button>
+                                </div>
+                            )}
+
+                            {students.filter(u => u.role === 'student' && u.name.toLowerCase().includes(studentSearch.toLowerCase())).length === 0 && (
+                                <div className="empty-state">
+                                    <p>Nenhum aluno encontrado com "{studentSearch}".</p>
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <SubmissionsTable 

@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Effect to check if the user is authenticated
     useEffect(() => {
         if (token) {
+            setLoading(true)
             // fetch user data from token
             getMe()
                 .then(res => setUser(res.data)) // set user data
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Login function
     function login(newToken: string) {
         // save token and fetch user
+        setLoading(true)
         localStorage.setItem('token', newToken)
         setToken(newToken)
     }

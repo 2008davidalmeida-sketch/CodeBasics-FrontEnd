@@ -25,7 +25,7 @@ export function StatsOverview({ totalStudents, hardestChallenge, avgCompletion }
                 <span className="stat-icon">📈</span>
                 <div className="stat-info">
                     <h3>{Math.round(avgCompletion)}%</h3>
-                    <p>Taxa de Sucesso</p>
+                    <p>Taxa de Sucesso Geral</p>
                 </div>
             </div>
         </div>

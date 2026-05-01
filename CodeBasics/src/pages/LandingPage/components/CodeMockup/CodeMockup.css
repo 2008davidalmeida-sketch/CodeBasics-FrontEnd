@@ -67,9 +67,9 @@
 .number { color: #B5CEA8; }
 .boolean { color: #569CD6; }
 
-.ai-feedback-box {
-  background-color: rgba(61, 139, 46, 0.1);
-  border: 1px solid rgba(61, 139, 46, 0.2);
+.mockup-ai-feedback-box {
+  background-color: rgba(61, 139, 46, 0.04);
+  border: 1px solid rgba(61, 139, 46, 0.1);
   border-radius: 8px;
   padding: 16px;
 }
