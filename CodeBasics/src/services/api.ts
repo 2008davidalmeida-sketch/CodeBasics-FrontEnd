@@ -46,4 +46,13 @@ export function getChallengeSubmissions(challengeId: string, config?: AxiosReque
     return api.get(`/submissions/challenge/${challengeId}`, config)
 }
 
+// teacher endpoints
+export function getAllStudents(config?: AxiosRequestConfig) {
+    return api.get('/users/students', config)
+}
+
+export function getAllSubmissions(params?: any, config?: AxiosRequestConfig) {
+    return api.get('/submissions', { ...config, params })
+}
+
 export default api

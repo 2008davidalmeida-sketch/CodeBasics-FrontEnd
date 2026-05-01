@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard/Dashboard';
 import TopicDetails from './pages/TopicDetails/TopicDetails';
 import ExercisePage from './pages/ExercisePage/ExercisePage';
 import NotAutorizedPage from './pages/NotAutorizedPage/NotAutorizedPage';
+import TeacherDashboard from './pages/TeacherDashboard/TeacherDashboard';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
@@ -22,6 +23,7 @@ function App() {
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/topico/:id" element={<TopicDetails />} />
                     <Route path="/topico/:topicId/exercicio/:exerciseId" element={<ExercisePage />} />
+                    <Route path="/teacher" element={<TeacherDashboard />} />
                     <Route path="/nao-autorizado" element={<NotAutorizedPage />} />
                 </Routes>
             </Router>

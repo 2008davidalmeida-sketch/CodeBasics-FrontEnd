@@ -41,6 +41,9 @@ export function Header() {
                 
                 <nav className="header-nav">
                     <Link to="/como-funciona" className="nav-link">como funciona</Link>
+                    {user?.role === 'teacher' && (
+                        <Link to="/teacher" className="nav-link teacher-link">área do professor</Link>
+                    )}
                     
                     {user ? (
                         <div className="user-menu-container" ref={menuRef}>
@@ -70,8 +73,19 @@ export function Header() {
                                         className="dropdown-item"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
-                                        🏠 Painel de Controlo
+                                        🏠 Painel do Aluno
                                     </Link>
+                                    
+                                    {user.role === 'teacher' && (
+                                        <Link 
+                                            to="/teacher" 
+                                            className="dropdown-item"
+                                            onClick={() => setIsMenuOpen(false)}
+                                        >
+                                            👨‍🏫 Área do Professor
+                                        </Link>
+                                    )}
+                                    
                                     <button onClick={handleLogout} className="dropdown-item logout">
                                         🚪 Sair da Conta
                                     </button>

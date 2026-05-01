@@ -43,6 +43,19 @@
     color: #3D8B2E;
 }
 
+.nav-link.teacher-link {
+    color: #3D8B2E;
+    border: 1px solid #3D8B2E;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.nav-link.teacher-link:hover {
+    background: #3D8B2E;
+    color: white;
+}
+
 /* User Menu */
 .user-menu-container {
     position: relative;
