@@ -25,8 +25,9 @@ export interface Submission {
     userId: string
     challengeId: string
     code: string
-    feedback: string
-    passed: boolean
+    feedback?: string
+    passed?: boolean
+    status: 'pending' | 'processing' | 'completed' | 'failed'
     createdAt: string
     updatedAt: string
-}
+}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
-import { getChallenge, createSubmission, getChallengeSubmissions } from '../../services/api'
+import { getChallenge, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
 import type { Challenge, Submission } from '../../types'
 import './ExercisePage.css'
 
@@ -20,7 +20,7 @@ export default function ExercisePage() {
     const [error, setError] = useState<string | null>(null)
 
     const [code, setCode] = useState('')
-    const [status, setStatus] = useState<'todo' | 'passed' | 'failed'>('todo')
+    const [status, setStatus] = useState<'todo' | 'passed' | 'failed' | 'pending'>('todo')
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [showFeedback, setShowFeedback] = useState(false)
     const [feedback, setFeedback] = useState('')
@@ -201,6 +201,26 @@ export default function ExercisePage() {
         }
     }
 
+    const pollSubmissionStatus = async (submissionId: string) => {
+        const pollInterval = 2000 // 2 seconds
+        const maxAttempts = 30 // 1 minute timeout
+
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            try {
+                const response = await getSubmission(submissionId)
+                const submission: Submission = response.data
+
+                if (submission.status === 'completed' || submission.status === 'failed') {
+                    return submission
+                }
+            } catch (err) {
+                console.error('Erro ao verificar status da submissão:', err)
+            }
+            await new Promise(resolve => setTimeout(resolve, pollInterval))
+        }
+        throw new Error('Tempo esgotado ao avaliar exercício.')
+    }
+
     const handleSubmeter = async () => {
         if (!exerciseId || isSubmitting) return
 
@@ -208,16 +228,19 @@ export default function ExercisePage() {
         setShowFeedback(false) // Hide previous feedback
 
         try {
-            // Create submission
+            // 1. Create submission (returns pending status)
             const response = await createSubmission(exerciseId, code)
-            const result: Submission = response.data
+            const initialSubmission: Submission = response.data
 
-            // Set status and feedback
+            // 2. Poll for the final result
+            const result = await pollSubmissionStatus(initialSubmission._id)
+
+            // 3. Set status and feedback
             setStatus(result.passed ? 'passed' : 'failed')
-            setFeedback(result.feedback)
+            setFeedback(result.feedback || '')
             setShowFeedback(true)
 
-            // Atualiza o estado local para marcar como concluído se passou
+            // Update local state to mark as completed if passed
             if (result.passed && challenge) {
                 setChallenge({ ...challenge, completed: true })
             }
@@ -229,13 +252,14 @@ export default function ExercisePage() {
                     block: 'nearest'
                 })
             }, 100)
-        } catch (err) {
+        } catch (err: any) {
             console.error('Erro ao submeter:', err)
-            alert('Ocorreu um erro ao submeter o exercício. Tenta novamente.')
+            alert(err.message || 'Ocorreu um erro ao submeter o exercício. Tenta novamente.')
         } finally {
             setIsSubmitting(false)
         }
     }
+
 
     if (isLoading) {
         return (
@@ -281,6 +305,7 @@ export default function ExercisePage() {
                                 {status === 'passed' && 'Completo ✅'}
                                 {status === 'failed' && 'Não passou ❌'}
                                 {status === 'todo' && 'Por fazer'}
+                                {status === 'pending' && 'A avaliar... ⏳'}
                             </div>
                         </div>
 
@@ -344,7 +369,7 @@ export default function ExercisePage() {
                                 onClick={handleSubmeter}
                                 disabled={isSubmitting}
                             >
-                                {isSubmitting ? 'A avaliar...' : 'Submeter Exercício'}
+                                {isSubmitting ? 'A avaliar pela IA...' : 'Submeter Exercício'}
                             </button>
                         </div>
 

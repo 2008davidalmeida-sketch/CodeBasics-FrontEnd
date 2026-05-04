@@ -11,7 +11,7 @@ export function StatsOverview({ totalStudents, hardestChallenge, avgCompletion }
                 <span className="stat-icon">👥</span>
                 <div className="stat-info">
                     <h3>{totalStudents}</h3>
-                    <p>Usuários Registados</p>
+                    <p>Alunos Registados</p>
                 </div>
             </div>
             <div className="stat-card warning">
