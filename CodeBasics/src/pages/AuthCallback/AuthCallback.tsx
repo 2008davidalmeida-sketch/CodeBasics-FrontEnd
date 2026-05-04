@@ -5,28 +5,30 @@ import { AuthLoader } from './components/AuthLoader/AuthLoader'
 import './AuthCallback.css'
 
 export default function AuthCallback() {
-    const { login } = useAuth()
+    const { login, user, loading: authLoading } = useAuth()
     const [searchParams] = useSearchParams()
     const navigate = useNavigate()
 
     useEffect(() => {
+        // get token from url
         const token = searchParams.get('token')
+        if (token) {
+            login(token)
+        } else if (!authLoading && !token) {
+            navigate('/nao-autorizado')
+        }
+    }, [searchParams, login, navigate, authLoading])
 
-        // Simulate a tiny delay for the "wow" effect of the loader
-        const timer = setTimeout(() => {
-            // if token is present, login and redirect to dashboard
-            if (token) {
-                login(token)
-                navigate('/dashboard')
+    useEffect(() => {
+        // after user load, redirect to dashboard based on role
+        if (!authLoading && user) {
+            if (user.role === 'teacher') {
+                navigate('/teacher', { replace: true })
             } else {
-                // otherwise redirect to login
-                navigate('/nao-autorizado')
+                navigate('/dashboard', { replace: true })
             }
-        }, 1500)
-
-        // Cleanup the timer
-        return () => clearTimeout(timer)
-    }, [searchParams, login, navigate])
+        }
+    }, [user, authLoading, navigate])
 
     // Render the auth loader
     return (

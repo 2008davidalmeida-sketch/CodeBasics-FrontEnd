@@ -8,23 +8,23 @@ interface AccessDeniedCardProps {
 
 export function AccessDeniedCard({ title, message }: AccessDeniedCardProps) {
     const { logout } = useAuth()
-    const navigate = useNavigate()
 
     const handleSwitchAccount = () => {
+        // logout and redirect to google auth
         logout()
-        navigate('/')
+        window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
     }
 
     return (
         <div className="auth-card">
             <div className="icon-wrapper">
-                <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    width="48" 
-                    height="48" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="48"
+                    height="48"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
                     strokeWidth="2.5" 
                     strokeLinecap="round" 
                     strokeLinejoin="round"

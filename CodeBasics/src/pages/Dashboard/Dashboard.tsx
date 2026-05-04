@@ -32,7 +32,7 @@ export default function Dashboard() {
                 const [challengesRes, allSubmissions] = await Promise.all([
                     getChallenges({ signal: controller.signal }).then(res => res.data),
                     getMySubmissions({ signal: controller.signal })
-                        .then(res => res.data)
+                        .then(res => res.data.data)
                         .catch(err => {
                             console.warn('Submissões não carregadas (utilizador possivelmente não autenticado):', err)
                             return []
@@ -162,7 +162,7 @@ export default function Dashboard() {
                             label=""
                             value=""
                             icon="🔥"
-                        />
+                        /> 
                         <StatsCard
                             label="Total de Pontos"
                             value={completedChallenges * 150}

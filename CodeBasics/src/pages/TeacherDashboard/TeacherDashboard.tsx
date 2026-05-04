@@ -53,9 +53,9 @@ export default function TeacherDashboard() {
                 ])
 
                 // Get all submissions, challenges and students from the API
-                const allSubmissions = submissionsRes.data
+                const allSubmissions = submissionsRes.data.data
                 const allChallenges = challengesRes.data
-                const allStudents = studentsRes.data
+                const allStudents = studentsRes.data.data
 
                 // Calculate progress for each student
                 const studentsWithProgress = allStudents.map((student: User) => {

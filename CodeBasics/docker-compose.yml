@@ -1,0 +1,7 @@
+services:
+  frontend:
+    container_name: codebasics-frontend
+    build: .
+    ports:
+      - "5173:5173"
+    restart: always

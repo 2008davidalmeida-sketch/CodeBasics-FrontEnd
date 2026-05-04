@@ -23,7 +23,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         if (token) {
             setLoading(true)
-            // fetch user data from token
+            
+            // fetch user data
             getMe()
                 .then(res => setUser(res.data)) // set user data
                 .catch(() => logout()) // if there is an error, logout
@@ -35,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Login function
     function login(newToken: string) {
-        // save token and fetch user
+        // save token and fetch user (trigger useEffect above)
         setLoading(true)
         localStorage.setItem('token', newToken)
         setToken(newToken)
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Logout function
     function logout() {
-        // clear token and user
+        // clear token and user (trigger useEffect above)
         localStorage.removeItem('token')
         setToken(null)
         setUser(null)
@@ -59,10 +60,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
     // check if the context is not null
     const context = useContext(AuthContext)
+    
     // if the context is null, throw an error
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider')
     }
+
     // return the context
     return context
 }

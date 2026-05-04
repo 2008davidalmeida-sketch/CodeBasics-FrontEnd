@@ -12,17 +12,15 @@ export function Header() {
 
     // Dropdown menu state
     useEffect(() => {
-        // Close menu when clicking outside
-        function handleClickOutside(event: MouseEvent) {
+        // Event listener to close the menu when clicking outside
+        document.addEventListener('mousedown', (event: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 setIsMenuOpen(false);
             }
-        }
-        // Event listener to close the menu when clicking outside
-        document.addEventListener('mousedown', handleClickOutside);
+        });
 
         // Close menu on route change
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', () => setIsMenuOpen(false));
     }, []);
 
     const handleLogout = () => {

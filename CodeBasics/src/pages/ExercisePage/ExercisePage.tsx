@@ -109,7 +109,7 @@ export default function ExercisePage() {
                 const [challengeRes, submissions] = await Promise.all([
                     getChallenge(exerciseId, { signal: controller.signal }).then(res => res.data),
                     getChallengeSubmissions(exerciseId, { signal: controller.signal })
-                        .then(res => res.data)
+                        .then(res => res.data.data)
                         .catch(err => {
                             console.warn('Submissões do exercício não carregadas:', err)
                             return []
