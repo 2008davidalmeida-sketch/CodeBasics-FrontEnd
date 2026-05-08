@@ -23,11 +23,11 @@ export interface Challenge {
 export interface Submission {
     _id: string
     userId: string
-    challengeId: string
+    challengeId: string | { _id: string }
     code: string
     feedback?: string
     passed?: boolean
     status: 'pending' | 'processing' | 'completed' | 'failed'
     createdAt: string
     updatedAt: string
-}
+}

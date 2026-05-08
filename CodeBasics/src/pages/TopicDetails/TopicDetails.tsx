@@ -36,21 +36,28 @@ export default function TopicDetails() {
                             return []
                         })
                 ])
-                
+
                 // If the request is not aborted, set the challenge and loading to false
                 if (!controller.signal.aborted) {
                     const allChallenges = challengesRes
 
                     // Filter challenges by topic id
-                    const topicChallenges = allChallenges.filter((c: Challenge) => 
+                    const topicChallenges = allChallenges.filter((c: Challenge) =>
                         c.topic.toLowerCase().replace(/\s+/g, '-') === id
                     )
 
                     // challengeId vem populado do MongoDB (é um objeto, não uma string)
                     const mappedChallenges = topicChallenges.map((challenge: Challenge) => {
-                        const hasPassed = allSubmissions.some((s: any) => {
-                            const subId = typeof s.challengeId === 'object' ? s.challengeId._id : s.challengeId
-                            return String(subId) === String(challenge._id) && s.passed
+                        const hasPassed = allSubmissions.some((s: Submission) => {
+                            // Check if challengeId exists and is an object (populated) or a string
+                            const subId = (s.challengeId && typeof s.challengeId === 'object')
+                                ? s.challengeId._id
+                                : s.challengeId;
+
+                            // Ensure subId is a non-empty string before comparing
+                            if (!subId) return false;
+
+                            return String(subId) === String(challenge._id) && s.passed === true;
                         })
                         return { ...challenge, completed: hasPassed }
                     })

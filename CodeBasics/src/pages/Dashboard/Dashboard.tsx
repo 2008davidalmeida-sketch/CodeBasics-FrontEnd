@@ -9,13 +9,13 @@ import { getChallenges, getMySubmissions } from '../../services/api'
 import type { Challenge, Submission } from '../../types'
 import './Dashboard.css'
 
+// Interface for challenges from API ( extends Challenge interface and adds completed property)
+interface DashboardChallenge extends Challenge {
+    completed: boolean
+}
+
 export default function Dashboard() {
     const { user } = useAuth()
-
-    // Interface for challenges from API ( extends Challenge interface and adds completed property)
-    interface DashboardChallenge extends Challenge {
-        completed: boolean
-    }
 
     const [challenges, setChallenges] = useState<DashboardChallenge[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -44,9 +44,13 @@ export default function Dashboard() {
 
                     // challengeId from MongoDB (object, not string)
                     const mappedChallenges = allChallenges.map((challenge: Challenge) => {
-                        const hasPassed = allSubmissions.some((s: any) => {
-                            const subId = typeof s.challengeId === 'object' ? s.challengeId._id : s.challengeId
-                            return String(subId) === String(challenge._id) && s.passed
+                        const hasPassed = allSubmissions.some((s: Submission) => {
+                            // Check if challengeId exists and is an object (populated) or a string
+                            const subId = (s.challengeId && typeof s.challengeId === 'object')
+                                ? (s.challengeId._id ?? (() => { console.warn('Submission has populated challengeId without _id:', s); return undefined; })())
+                                : s.challengeId;
+
+                            return String(subId) === String(challenge._id) && s.passed === true;
                         })
                         return { ...challenge, completed: hasPassed }
                     })
@@ -162,7 +166,7 @@ export default function Dashboard() {
                             label=""
                             value=""
                             icon="🔥"
-                        /> 
+                        />
                         <StatsCard
                             label="Total de Pontos"
                             value={completedChallenges * 150}

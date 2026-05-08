@@ -38,6 +38,10 @@ export function createSubmission(challengeId: string, code: string, config?: Axi
     return api.post('/submissions', { challengeId, code }, config)
 }
 
+export function deleteSubmission(id: string, config?: AxiosRequestConfig) {
+    return api.delete(`/submissions/${id}`, config)
+}
+
 export function getMySubmissions(config?: AxiosRequestConfig) {
     return api.get('/submissions/me', config)
 }

@@ -1,10 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
-import { getChallenge, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
+import { getChallenge, deleteSubmission, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
 import type { Challenge, Submission } from '../../types'
 import './ExercisePage.css'
+import CodeMirror from '@uiw/react-codemirror'
+import { python } from '@codemirror/lang-python'
+import { oneDark } from '@codemirror/theme-one-dark'
 
 // Skulpt is loaded globally via CDN in index.html
 declare const Sk: any
@@ -28,74 +31,16 @@ export default function ExercisePage() {
     const [isRunning, setIsRunning] = useState(false)
     const [showTerminal, setShowTerminal] = useState(false)
 
-    // Refs for scrolling sync
-    const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const lineNumbersRef = useRef<HTMLDivElement>(null)
+    // Handle code change from CodeMirror
+    const handleCodeChange = useCallback((value: string) => {
+        setCode(value)
+    }, [])
 
-    // Sync line numbers scroll with textarea scroll
-    const handleScroll = () => {
-        if (textareaRef.current && lineNumbersRef.current) {
-            lineNumbersRef.current.scrollTop = textareaRef.current.scrollTop
-        }
-    }
-
-    // Calculate number of lines
-    const lineCount = code.split('\n').length
-
-    // Handle indentation and special keys like in VS Code
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        const { selectionStart, selectionEnd, value } = e.currentTarget
-
-        // Handle Tab key
-        if (e.key === 'Tab') {
-            e.preventDefault()
-            const indent = '    ' // 4 spaces
-            const before = value.substring(0, selectionStart)
-            const after = value.substring(selectionEnd)
-            
-            setCode(before + indent + after)
-            
-            // Re-set cursor position after state update
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    textareaRef.current.selectionStart = textareaRef.current.selectionEnd = selectionStart + indent.length
-                }
-            }, 0)
-        }
-
-        // Handle Enter key (Auto-indent)
-        if (e.key === 'Enter') {
-            e.preventDefault()
-            
-            // Get current line indentation
-            const lines = value.substring(0, selectionStart).split('\n')
-            const currentLine = lines[lines.length - 1]
-            const indentMatch = currentLine.match(/^\s*/)
-            const indent = indentMatch ? indentMatch[0] : ''
-            
-            // If line ends with colon, add extra indent (standard for Python)
-            const extraIndent = currentLine.trim().endsWith(':') ? '    ' : ''
-            
-            const before = value.substring(0, selectionStart)
-            const after = value.substring(selectionEnd)
-            const newText = before + '\n' + indent + extraIndent + after
-            
-            setCode(newText)
-            
-            // Re-set cursor position
-            setTimeout(() => {
-                if (textareaRef.current) {
-                    const newPos = selectionStart + 1 + indent.length + extraIndent.length
-                    textareaRef.current.selectionStart = textareaRef.current.selectionEnd = newPos
-                }
-            }, 0)
-        }
-    }
-
-    useEffect(() => {
+    // Fetch challenge data when exerciseId changes
+    useEffect(function () {
         const controller = new AbortController()
 
-        const fetchChallengeData = async () => {
+        async function fetchChallengeData() {
             try {
                 // Check if the exerciseId is valid
                 if (!exerciseId) {
@@ -107,7 +52,9 @@ export default function ExercisePage() {
                 // Get the challenge and submissions data from the API
                 // If submissions fail (e.g. 401), we default to empty array
                 const [challengeRes, submissions] = await Promise.all([
-                    getChallenge(exerciseId, { signal: controller.signal }).then(res => res.data),
+                    getChallenge(exerciseId, { signal: controller.signal })
+                        .then(res => res.data),
+
                     getChallengeSubmissions(exerciseId, { signal: controller.signal })
                         .then(res => res.data.data)
                         .catch(err => {
@@ -121,10 +68,12 @@ export default function ExercisePage() {
                     const challengeData = challengeRes
 
                     // Check if any submission was successful
-                    const isCompleted = submissions.some((s: Submission) => s.passed)
+                    const isCompleted = submissions.some(function (s: Submission) {
+                        return s.passed === true;
+                    });
 
                     // Set the challenge with the completed status
-                    setChallenge({ ...challengeData, completed: isCompleted })
+                    setChallenge({ ...challengeData, completed: isCompleted });
 
                     // If already completed, set the status as 'passed'
                     if (isCompleted) {
@@ -135,7 +84,7 @@ export default function ExercisePage() {
                     } else {
                         setCode(challengeData.starterCode || '# Escreve o teu código Python aqui\n')
                     }
-                    
+
                     setIsLoading(false)
                 }
             } catch (err) {
@@ -148,34 +97,39 @@ export default function ExercisePage() {
         }
 
         fetchChallengeData()
-        return () => controller.abort()
+        return function () {
+            controller.abort()
+        }
     }, [exerciseId])
 
     // Run Python code locally using Skulpt
-    const handleRun = async () => {
+    async function handleRun() {
         if (isRunning) return
+
         setIsRunning(true)
         setShowTerminal(true)
         setTerminalOutput('>>> A executar...\n')
 
+        // Set the output to an empty string
         let output = ''
 
         // Configure Skulpt
         Sk.configure({
-            output: (text: string) => { output += text },
-            read: (filename: string) => {
+            output: function (text: string) { output += text },
+            read: function (filename: string) {
                 if (Sk.builtinFiles === undefined || Sk.builtinFiles['files'][filename] === undefined) {
                     throw new Error(`File not found: ${filename}`)
                 }
                 return Sk.builtinFiles['files'][filename]
             },
-            inputfun: (prompt: string) => {
-                return new Promise((resolve) => {
+            // Configure input function to get input from the user
+            inputfun: function (prompt: string) {
+                return new Promise(function (resolve) {
                     // 1. Ensure the prompt is printed to the terminal
                     if (prompt) setTerminalOutput(prev => prev + prompt);
-                    
+
                     // 2. Small delay to allow React to render the output before prompt blocks
-                    setTimeout(() => {
+                    setTimeout(function () {
                         const result = window.prompt(prompt) || '';
                         // 3. Show the input in the terminal for a realistic feel
                         setTerminalOutput(prev => prev + result + '\n');
@@ -183,16 +137,17 @@ export default function ExercisePage() {
                     }, 50);
                 });
             },
+            // The input function should take a prompt
             inputfunTakesPrompt: true,
         })
 
         try {
             setTerminalOutput('') // Start with clean terminal
 
-            // 
-            await Sk.misceval.asyncToPromise(() => {
+            await Sk.misceval.asyncToPromise(function () {
                 return Sk.importMainWithBody('<stdin>', false, code, true)
             })
+
             setTerminalOutput(output || '(sem output)\n')
         } catch (err: any) {
             setTerminalOutput(output + '\n❌ Erro: ' + err.toString())
@@ -201,7 +156,7 @@ export default function ExercisePage() {
         }
     }
 
-    const pollSubmissionStatus = async (submissionId: string) => {
+    async function pollSubmissionStatus(submissionId: string) {
         const pollInterval = 2000 // 2 seconds
         const maxAttempts = 30 // 1 minute timeout
 
@@ -221,7 +176,7 @@ export default function ExercisePage() {
         throw new Error('Tempo esgotado ao avaliar exercício.')
     }
 
-    const handleSubmeter = async () => {
+    async function handleSubmeter() {
         if (!exerciseId || isSubmitting) return
 
         setIsSubmitting(true)
@@ -235,18 +190,28 @@ export default function ExercisePage() {
             // 2. Poll for the final result
             const result = await pollSubmissionStatus(initialSubmission._id)
 
+            // Throw an error if the result is not valid or feedback is missing
+            if (!result || result.feedback === undefined || result.feedback === null) {
+                await deleteSubmission(initialSubmission._id)
+                throw new Error('Erro ao avaliar o exercício. Tenta novamente mais tarde.')
+            }
+
             // 3. Set status and feedback
-            setStatus(result.passed ? 'passed' : 'failed')
+            const hasPassed = result.passed === true;
+            setStatus(hasPassed ? 'passed' : 'failed')
             setFeedback(result.feedback || '')
             setShowFeedback(true)
 
             // Update local state to mark as completed if passed
-            if (result.passed && challenge) {
-                setChallenge({ ...challenge, completed: true })
+            if (hasPassed && challenge) {
+                setChallenge((prev: LocalChallenge) => {
+                    if (!prev) return null;
+                    return { ...prev, completed: true };
+                });
             }
 
             // Auto-scroll to feedback section
-            setTimeout(() => {
+            setTimeout(function () {
                 document.getElementById('ai-feedback')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest'
@@ -334,19 +299,35 @@ export default function ExercisePage() {
                                 </button>
                             </div>
                             <div className="editor-body">
-                                <div className="line-numbers" ref={lineNumbersRef}>
-                                    {Array.from({ length: Math.max(lineCount, 15) }).map((_, i) => (
-                                        <span key={i}>{i + 1}</span>
-                                    ))}
-                                </div>
-                                <textarea
-                                    ref={textareaRef}
-                                    className="code-textarea"
+                                <CodeMirror
                                     value={code}
-                                    onChange={(e) => setCode(e.target.value)}
-                                    onScroll={handleScroll}
-                                    onKeyDown={handleKeyDown}
-                                    spellCheck={false}
+                                    height="450px"
+                                    theme={oneDark}
+                                    extensions={[python()]}
+                                    onChange={handleCodeChange}
+                                    className="codemirror-editor"
+                                    basicSetup={{
+                                        lineNumbers: true,
+                                        foldGutter: true,
+                                        dropCursor: true,
+                                        allowMultipleSelections: true,
+                                        indentOnInput: true,
+                                        syntaxHighlighting: true,
+                                        bracketMatching: true,
+                                        closeBrackets: true,
+                                        autocompletion: true,
+                                        rectangularSelection: true,
+                                        crosshairCursor: true,
+                                        highlightActiveLine: true,
+                                        highlightSelectionMatches: true,
+                                        closeBracketsKeymap: true,
+                                        defaultKeymap: true,
+                                        searchKeymap: true,
+                                        historyKeymap: true,
+                                        foldKeymap: true,
+                                        completionKeymap: true,
+                                        lintKeymap: true,
+                                    }}
                                 />
                             </div>
 
@@ -361,7 +342,7 @@ export default function ExercisePage() {
                         </div>
 
                         <div className="editor-actions">
-                            <button className="upload-btn">
+                            <button className="upload-btn" onClick={() => { window.alert('Upload de ficheiros em desenvolvimento...') }}>
                                 <span>📁</span> Carregar ficheiro .py
                             </button>
                             <button
@@ -369,7 +350,7 @@ export default function ExercisePage() {
                                 onClick={handleSubmeter}
                                 disabled={isSubmitting}
                             >
-                                {isSubmitting ? 'A avaliar pela IA...' : 'Submeter Exercício'}
+                                {isSubmitting ? 'A avaliar...' : 'Submeter Exercício'}
                             </button>
                         </div>
 
