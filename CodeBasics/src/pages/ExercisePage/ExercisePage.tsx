@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
@@ -30,6 +30,7 @@ export default function ExercisePage() {
     const [terminalOutput, setTerminalOutput] = useState('')
     const [isRunning, setIsRunning] = useState(false)
     const [showTerminal, setShowTerminal] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Handle code change from CodeMirror
     const handleCodeChange = useCallback((value: string) => {
@@ -225,6 +226,43 @@ export default function ExercisePage() {
         }
     }
 
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0]
+
+        // if file is null, return
+        if (!file) return
+
+        // if file is not a Python file, return
+        if (!file.name.endsWith('.py')) {
+            alert('Por favor, carrega um ficheiro Python (.py)')
+            event.target.value = ''
+            return
+        }
+
+        // if file is bigger than 1MB, return
+        const MAX_SIZE = 1 * 1024 * 1024 // 1MB
+        if (file.size > MAX_SIZE) {
+            alert('O ficheiro excede o limite de tamanho (1MB).')
+            event.target.value = ''
+            return
+        }
+
+        // Read the file and set the code
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            // if content is not a string, return
+            const content = e.target?.result
+            if (typeof content === 'string') {
+                setCode(content)
+            }
+        }
+
+        // Read the file
+        reader.readAsText(file)
+
+        // Clear the input value so that the same file can be selected again
+        event.target.value = ''
+    }
 
     if (isLoading) {
         return (
@@ -342,7 +380,14 @@ export default function ExercisePage() {
                         </div>
 
                         <div className="editor-actions">
-                            <button className="upload-btn" onClick={() => { window.alert('Upload de ficheiros em desenvolvimento...') }}>
+                            <input 
+                                type="file" 
+                                accept=".py" 
+                                style={{ display: 'none' }} 
+                                ref={fileInputRef}
+                                onChange={handleFileUpload}
+                            />
+                            <button className="upload-btn" onClick={() => fileInputRef.current?.click()}>
                                 <span>📁</span> Carregar ficheiro .py
                             </button>
                             <button

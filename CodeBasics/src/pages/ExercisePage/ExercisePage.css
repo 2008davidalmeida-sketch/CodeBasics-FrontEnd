@@ -207,6 +207,30 @@
     font-family: 'DM Mono', monospace !important;
 }
 
+/* Custom Scrollbar for CodeMirror */
+.cm-scroller::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 6px;
+    border: 3px solid #1e1e1e;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.cm-scroller::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
 .cm-gutters {
     background-color: #1e1e1e !important;
     border-right: 1px solid #2d2d2d !important;
@@ -361,16 +385,26 @@
 }
 
 .integrated-output::-webkit-scrollbar {
-    width: 10px;
+    width: 12px;
+    height: 12px;
 }
 
 .integrated-output::-webkit-scrollbar-track {
-    background: #1e1e1e;
+    background: transparent;
 }
 
 .integrated-output::-webkit-scrollbar-thumb {
-    background: #3d3d3d;
-    border-radius: 4px;
+    background: #475569;
+    border-radius: 6px;
+    border: 3px solid #1e1e1e;
+}
+
+.integrated-output::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+
+.integrated-output::-webkit-scrollbar-corner {
+    background: transparent;
 }
 
 /* AI Feedback Section */
