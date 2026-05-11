@@ -12,12 +12,14 @@ import './Dashboard.css'
 // Interface for challenges from API ( extends Challenge interface and adds completed property)
 interface DashboardChallenge extends Challenge {
     completed: boolean
+    firstTry: boolean
 }
 
 export default function Dashboard() {
     const { user } = useAuth()
 
     const [challenges, setChallenges] = useState<DashboardChallenge[]>([])
+    const [streak, setStreak] = useState(0)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -42,20 +44,40 @@ export default function Dashboard() {
                 if (!controller.signal.aborted) {
                     const allChallenges = challengesRes
 
-                    // challengeId from MongoDB (object, not string)
+                    // map challenges and check if completed and if completed at first try
                     const mappedChallenges = allChallenges.map((challenge: Challenge) => {
-                        const hasPassed = allSubmissions.some((s: Submission) => {
-                            // Check if challengeId exists and is an object (populated) or a string
+                        const challengeSubmissions = allSubmissions.filter((s: Submission) => {
                             const subId = (s.challengeId && typeof s.challengeId === 'object')
-                                ? (s.challengeId._id ?? (() => { console.warn('Submission has populated challengeId without _id:', s); return undefined; })())
+                                ? s.challengeId._id
                                 : s.challengeId;
+                            return String(subId) === String(challenge._id);
+                        });
 
-                            return String(subId) === String(challenge._id) && s.passed === true;
-                        })
-                        return { ...challenge, completed: hasPassed }
+                        const hasPassed = challengeSubmissions.some((s: Submission) => s.passed === true);
+                        const hasFailed = challengeSubmissions.some((s: Submission) => s.passed === false);
+
+                        return {
+                            ...challenge,
+                            completed: hasPassed,
+                            firstTry: hasPassed && !hasFailed
+                        }
                     })
 
+                    // Calculate Streak: consecutive first-try completions in order
+                    const sorted = [...mappedChallenges].sort((a, b) => a.order - b.order);
+                    let currentStreak = 0;
+                    for (const ch of sorted) {
+                        if (ch.completed) {
+                            if (ch.firstTry) {
+                                currentStreak++;
+                            } else {
+                                currentStreak = 0; // Reset streak on failure
+                            }
+                        }
+                    }
+
                     setChallenges(mappedChallenges)
+                    setStreak(currentStreak)
                     setIsLoading(false)
                 }
             } catch (err) {
@@ -163,8 +185,8 @@ export default function Dashboard() {
                             icon="🏆"
                         />
                         <StatsCard
-                            label=""
-                            value=""
+                            label="Streak à Primeira"
+                            value={streak}
                             icon="🔥"
                         />
                         <StatsCard
