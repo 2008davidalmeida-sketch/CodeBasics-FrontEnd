@@ -185,7 +185,7 @@ export default function Dashboard() {
                             icon="🏆"
                         />
                         <StatsCard
-                            label="Streak à Primeira"
+                            label="Repostas corretas consecutivas"
                             value={Number(streak)}
                             icon="🔥"
                         />
