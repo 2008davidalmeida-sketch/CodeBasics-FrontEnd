@@ -205,7 +205,7 @@ export default function ExercisePage() {
 
             // Update local state to mark as completed if passed
             if (hasPassed && challenge) {
-                setChallenge((prev: LocalChallenge) => {
+                setChallenge((prev) => {
                     if (!prev) return null;
                     return { ...prev, completed: true };
                 });
