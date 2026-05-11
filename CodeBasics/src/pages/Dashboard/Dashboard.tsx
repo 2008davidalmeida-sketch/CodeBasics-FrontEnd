@@ -46,11 +46,10 @@ export default function Dashboard() {
 
                     // map challenges and check if completed and if completed at first try
                     const mappedChallenges = allChallenges.map((challenge: Challenge) => {
+                        const challengeId = String(challenge._id);
                         const challengeSubmissions = allSubmissions.filter((s: Submission) => {
-                            const subId = (s.challengeId && typeof s.challengeId === 'object')
-                                ? s.challengeId._id
-                                : s.challengeId;
-                            return String(subId) === String(challenge._id);
+                            const subId = typeof s.challengeId === 'object' ? s.challengeId._id : s.challengeId;
+                            return String(subId) === challengeId;
                         });
 
                         const hasPassed = challengeSubmissions.some((s: Submission) => s.passed === true);
@@ -64,7 +63,7 @@ export default function Dashboard() {
                     })
 
                     // Calculate Streak: consecutive first-try completions in order
-                    const sorted = [...mappedChallenges].sort((a, b) => a.order - b.order);
+                    const sorted = [...mappedChallenges].sort((a, b) => (a.order || 0) - (b.order || 0));
                     let currentStreak = 0;
                     for (const ch of sorted) {
                         if (ch.completed) {
@@ -76,6 +75,7 @@ export default function Dashboard() {
                         }
                     }
 
+                    console.log('Streak calculada:', currentStreak); // For debugging
                     setChallenges(mappedChallenges)
                     setStreak(currentStreak)
                     setIsLoading(false)
@@ -186,7 +186,7 @@ export default function Dashboard() {
                         />
                         <StatsCard
                             label="Streak à Primeira"
-                            value={streak}
+                            value={Number(streak)}
                             icon="🔥"
                         />
                         <StatsCard
