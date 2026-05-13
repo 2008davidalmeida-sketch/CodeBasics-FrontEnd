@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
-import { getChallenge, deleteSubmission, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
+import { getChallenges, getChallenge, deleteSubmission, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
 import type { Challenge, Submission } from '../../types'
 import './ExercisePage.css'
 import CodeMirror from '@uiw/react-codemirror'
@@ -21,6 +21,7 @@ export default function ExercisePage() {
     const [challenge, setChallenge] = useState<LocalChallenge | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [nextChallengeId, setNextChallengeId] = useState<string | null>(null)
 
     const [code, setCode] = useState('')
     const [status, setStatus] = useState<'todo' | 'passed' | 'failed' | 'pending'>('todo')
@@ -52,7 +53,7 @@ export default function ExercisePage() {
 
                 // Get the challenge and submissions data from the API
                 // If submissions fail (e.g. 401), we default to empty array
-                const [challengeRes, submissions] = await Promise.all([
+                const [challengeRes, submissions, allChallenges] = await Promise.all([
                     getChallenge(exerciseId, { signal: controller.signal })
                         .then(res => res.data),
 
@@ -60,6 +61,13 @@ export default function ExercisePage() {
                         .then(res => res.data.data)
                         .catch(err => {
                             console.warn('Submissões do exercício não carregadas:', err)
+                            return []
+                        }),
+
+                    getChallenges({ signal: controller.signal })
+                        .then(res => res.data)
+                        .catch(err => {
+                            console.warn('Desafios não carregados:', err)
                             return []
                         })
                 ])
@@ -72,6 +80,31 @@ export default function ExercisePage() {
                     const isCompleted = submissions.some(function (s: Submission) {
                         return s.passed === true;
                     });
+
+                    // Find the next challenge in the same topic
+                    if (allChallenges && allChallenges.length > 0) {
+                        const currentTopic = challengeData.topic;
+                        console.log('Finding next challenge for topic:', currentTopic);
+                        
+                        // Filter challenges by exact topic name from the current challenge
+                        const topicChallenges = allChallenges.filter((c: Challenge) =>
+                            c.topic === currentTopic
+                        ).sort((a: Challenge, b: Challenge) => a.order - b.order);
+
+                        console.log('Topic challenges found:', topicChallenges.length);
+
+                        const currentIndex = topicChallenges.findIndex((c: Challenge) => String(c._id) === String(exerciseId));
+                        console.log('Current exercise index:', currentIndex);
+
+                        if (currentIndex !== -1 && currentIndex < topicChallenges.length - 1) {
+                            const nextId = topicChallenges[currentIndex + 1]._id;
+                            console.log('Next challenge ID set to:', nextId);
+                            setNextChallengeId(nextId);
+                        } else {
+                            console.log('No next challenge found or it is the last one.');
+                            setNextChallengeId(null);
+                        }
+                    }
 
                     // Set the challenge with the completed status
                     setChallenge({ ...challengeData, completed: isCompleted });
@@ -435,6 +468,17 @@ export default function ExercisePage() {
                                     )
                                 })}
                             </div>
+                        </div>
+                    )}
+                    {/* 5. Botão de Próximo Desafio */}
+                    {status === 'passed' && nextChallengeId && challenge && (
+                        <div className="next-challenge-container">
+                            <Link 
+                                to={`/topico/${challenge.topic.toLowerCase().replace(/\s+/g, '-')}/exercicio/${nextChallengeId}`} 
+                                className="next-challenge-btn"
+                            >
+                                Próximo Desafio <span>→</span>
+                            </Link>
                         </div>
                     )}
                 </div>
