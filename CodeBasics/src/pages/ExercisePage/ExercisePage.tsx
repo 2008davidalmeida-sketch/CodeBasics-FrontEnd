@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Header } from '../../components/Header/Header'
 import { Footer } from '../../components/Footer/Footer'
-import { getChallenges, getChallenge, deleteSubmission, createSubmission, getChallengeSubmissions, getSubmission } from '../../services/api'
+import { getChallenges, getChallenge, deleteSubmission, createSubmission, getMySubmissions, getSubmission } from '../../services/api'
 import type { Challenge, Submission } from '../../types'
 import './ExercisePage.css'
 import CodeMirror from '@uiw/react-codemirror'
@@ -42,6 +42,15 @@ export default function ExercisePage() {
     useEffect(function () {
         const controller = new AbortController()
 
+        // Reset state for the new exercise
+        setIsLoading(true)
+        setStatus('todo')
+        setChallenge(null)
+        setNextChallengeId(null)
+        setFeedback('')
+        setShowFeedback(false)
+        setTerminalOutput('')
+
         async function fetchChallengeData() {
             try {
                 // Check if the exerciseId is valid
@@ -57,10 +66,10 @@ export default function ExercisePage() {
                     getChallenge(exerciseId, { signal: controller.signal })
                         .then(res => res.data),
 
-                    getChallengeSubmissions(exerciseId, { signal: controller.signal })
+                    getMySubmissions({ signal: controller.signal })
                         .then(res => res.data.data)
                         .catch(err => {
-                            console.warn('Submissões do exercício não carregadas:', err)
+                            console.warn('Submissões do utilizador não carregadas:', err)
                             return []
                         }),
 
@@ -76,9 +85,12 @@ export default function ExercisePage() {
                 if (!controller.signal.aborted) {
                     const challengeData = challengeRes
 
-                    // Check if any submission was successful
+                    // Check if the current user has passed this exercise
                     const isCompleted = submissions.some(function (s: Submission) {
-                        return s.passed === true;
+                        const subId = (s.challengeId && typeof s.challengeId === 'object')
+                            ? s.challengeId._id
+                            : s.challengeId;
+                        return String(subId) === String(exerciseId) && s.passed === true;
                     });
 
                     // Find the next challenge in the same topic
@@ -113,7 +125,12 @@ export default function ExercisePage() {
                     if (isCompleted) {
                         setStatus('passed')
                         // Opcional: Carregar o código da última submissão bem-sucedida
-                        const lastPassed = [...submissions].reverse().find((s: Submission) => s.passed)
+                        const lastPassed = [...submissions].reverse().find((s: Submission) => {
+                            const subId = (s.challengeId && typeof s.challengeId === 'object')
+                                ? s.challengeId._id
+                                : s.challengeId;
+                            return String(subId) === String(exerciseId) && s.passed === true;
+                        })
                         if (lastPassed) setCode(lastPassed.code)
                     } else {
                         setCode(challengeData.starterCode || '# Escreve o teu código Python aqui\n')
@@ -246,7 +263,7 @@ export default function ExercisePage() {
 
             // Auto-scroll to feedback section
             setTimeout(function () {
-                document.getElementById('ai-feedback')?.scrollIntoView({
+                document.getElementById('next-challenge')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest'
                 })
@@ -472,7 +489,7 @@ export default function ExercisePage() {
                     )}
                     {/* 5. Botão de Próximo Desafio */}
                     {status === 'passed' && nextChallengeId && challenge && (
-                        <div className="next-challenge-container">
+                        <div className="next-challenge-container" id="next-challenge">
                             <Link 
                                 to={`/topico/${challenge.topic.toLowerCase().replace(/\s+/g, '-')}/exercicio/${nextChallengeId}`} 
                                 className="next-challenge-btn"

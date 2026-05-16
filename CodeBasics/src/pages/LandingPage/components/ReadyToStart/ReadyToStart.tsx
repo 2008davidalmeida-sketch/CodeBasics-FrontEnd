@@ -13,7 +13,7 @@ export function ReadyToStart() {
                     <h2 className="cta-title">
                         Pronto para <span className="text-accent">começar?</span>
                     </h2>
-                    <p className="cta-subtext">apenas emails institucionais das escolas de</p>
+                    <p className="cta-subtext">Apenas emails institucionais das escolas de</p>
                     <p className="cta-subtext">Mangualde são aceites</p>
                 </div>                             
                 <div className="cta-button-container">

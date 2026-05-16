@@ -3,7 +3,8 @@ import type { AxiosRequestConfig } from 'axios'
 
 // create axios instance
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+    baseURL: import.meta.env.VITE_API_URL ||
+    'http://localhost:5000',
 })
 
 // attach token to every request

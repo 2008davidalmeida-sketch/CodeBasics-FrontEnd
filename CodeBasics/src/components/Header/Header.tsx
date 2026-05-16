@@ -38,9 +38,9 @@ export function Header() {
                 </Link>
 
                 <nav className="header-nav">
-                    <Link to="/como-funciona" className="nav-link">como funciona</Link>
+                    <Link to="/como-funciona" className="nav-link">Como funciona</Link>
                     {user?.role === 'teacher' && (
-                        <Link to="/teacher" className="nav-link teacher-link">área do professor</Link>
+                        <Link to="/teacher" className="nav-link teacher-link">Área do professor</Link>
                     )}
 
                     {user ? (

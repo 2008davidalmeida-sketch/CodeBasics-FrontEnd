@@ -11,7 +11,7 @@ export function Hero() {
             <div className="hero-container">
                 <div className="hero-badge">
                     <span className="badge-dot"></span>
-                    plataforma escolar · python
+                    Plataforma escolar · Python
                 </div>
                 
                 <h1 className="hero-title">
@@ -32,7 +32,7 @@ export function Hero() {
                     ) : (
                         <>
                             <GoogleButton className="hero-google-btn" />
-                            <span className="cta-subtext">apenas emails institucionais</span>
+                            <span className="cta-subtext">Apenas emails institucionais</span>
                         </>
                     )}
                 </div>
