@@ -3,26 +3,18 @@ import type { AxiosRequestConfig } from 'axios'
 
 // create axios instance
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL ||
+    baseURL: import.meta.env.VITE_API_URL || 
     'http://localhost:5000',
-})
-
-// attach token to every request
-api.interceptors.request.use((config) => {
-
-    // get token from local storage
-    const token = localStorage.getItem('token')
-
-    // if token exists, attach it to the request
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
+    withCredentials: true
 })
 
 // auth
 export function getMe(config?: AxiosRequestConfig) {
     return api.get('/auth/me', config)
+}
+
+export function logoutAPI(config?: AxiosRequestConfig) {
+    return api.post('/auth/logout', {}, config)
 }
 
 // challenges

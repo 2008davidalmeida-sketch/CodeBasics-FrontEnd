@@ -1,71 +1,56 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import type { User } from '../types'
-import { getMe } from '../services/api'
+import { getMe, logoutAPI } from '../services/api'
 
 interface AuthContextType {
     user: User | null
-    token: string | null
-    login: (token: string) => void
+    login: () => void // No longer takes a token string
     logout: () => void
     loading: boolean
 }
 
-// Create the AuthContext
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// AuthProvider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null)
-    const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
     const [loading, setLoading] = useState(true)
 
-    // Effect to check if the user is authenticated
+    // Check if the user has a valid session cookie on load
     useEffect(() => {
-        if (token) {
-            setLoading(true)
-            
-            // fetch user data
-            getMe()
-                .then(res => setUser(res.data)) // set user data
-                .catch(() => logout()) // if there is an error, logout
-                .finally(() => setLoading(false)) // finally set loading to false
-        } else {
-            setLoading(false)
-        }
-    }, [token])
-
-    // Login function
-    function login(newToken: string) {
-        // save token and fetch user (trigger useEffect above)
         setLoading(true)
-        localStorage.setItem('token', newToken)
-        setToken(newToken)
+        getMe()
+            .then(res => setUser(res.data))
+            .catch(() => setUser(null))
+            .finally(() => setLoading(false))
+    }, [])
+
+    // Called after returning from Google
+    function login() {
+        setLoading(true)
+        getMe()
+            .then(res => setUser(res.data))
+            .catch(() => setUser(null))
+            .finally(() => setLoading(false))
     }
 
     // Logout function
     function logout() {
-        // clear token and user (trigger useEffect above)
-        localStorage.removeItem('token')
-        setToken(null)
-        setUser(null)
+        logoutAPI().finally(() => {
+            setUser(null)
+        })
     }
 
     return (
-        <AuthContext.Provider value={{ user, token, login, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, logout, loading }}>
             {children}
         </AuthContext.Provider>
     )
 }
 
 export function useAuth() {
-    // check if the context is not null
     const context = useContext(AuthContext)
-    
-    // if the context is null, throw an error
     if (!context) {
         throw new Error('useAuth must be used within an AuthProvider')
     }
-
-    // return the context
     return context
 }

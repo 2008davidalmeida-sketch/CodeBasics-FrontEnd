@@ -7,7 +7,8 @@ interface GoogleButtonProps {
 export function GoogleButton({ className = '' }: GoogleButtonProps) {
     function handleGoogleLogin() {
         // Redirects to API Google login route
-        window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`
+        window.location.href = `${import.meta.env.VITE_API_URL ||
+            'http://localhost:5000'}/auth/google`
     }
 
     return (
