@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate} from 'react-router-dom'
+import { useNavigate, useSearchParams} from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { AuthLoader } from './components/AuthLoader/AuthLoader'
 import './AuthCallback.css'
@@ -7,9 +7,17 @@ import './AuthCallback.css'
 export default function AuthCallback() {
     const { login, user, loading: authLoading } = useAuth()
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
 
     useEffect(() => {
-        // We've been redirected back. The cookie should be set.
+        // Extract token from URL query parameter
+        const token = searchParams.get('token')
+        if (token) {
+            localStorage.setItem('authToken', token)
+            // Clean up URL to hide token
+            window.history.replaceState({}, document.title, '/auth/callback')
+        }
+        
         // Tell AuthContext to fetch the user.
         login()
     }, [])
