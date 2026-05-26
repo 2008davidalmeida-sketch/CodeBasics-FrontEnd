@@ -18,6 +18,7 @@ export default function AuthCallback() {
         // after user load, redirect based on authentication status and role
         if (authLoading) return
 
+        console.log('AuthCallback: user loaded', user)
         if (!user) {
             navigate('/nao-autorizado', { replace: true })
         } else if (user.role === 'teacher') {
