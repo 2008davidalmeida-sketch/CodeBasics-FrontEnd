@@ -241,8 +241,10 @@ export default function ExercisePage() {
             // 2. Poll for the final result
             const result = await pollSubmissionStatus(initialSubmission._id)
 
+            console.log(result)
+
             // Throw an error if the result is not valid or feedback is missing
-            if (!result || result.feedback === undefined || result.feedback === null) {
+            if (!result || result.feedback === undefined || result.feedback === null ) {
                 await deleteSubmission(initialSubmission._id)
                 throw new Error('Erro ao avaliar o exercício. Tenta novamente mais tarde.')
             }
