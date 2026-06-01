@@ -8,15 +8,6 @@ const api = axios.create({
     withCredentials: true
 })
 
-// Add Authorization header interceptor
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('authToken')
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
-})
-
 // auth
 export function getMe(config?: AxiosRequestConfig) {
     return api.get('/auth/me', config)
